@@ -115,7 +115,6 @@ class QuestionMixin:
             "DataExportTag": data_export_tag,
             "QuestionType": "TE",
             "Selector": text_type,
-            "SubSelector": "TX",
             "Configuration": {
                 "QuestionDescriptionOption": "UseText"
             }
