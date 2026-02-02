@@ -17,6 +17,7 @@ A comprehensive Python wrapper for the Qualtrics REST API v3. This module provid
   - Descriptive text blocks
 - **Question Management**: Add, update, and delete questions
 - **Block Management**: Create and manage survey blocks
+- **Embedded Data**: Configure embedded data fields and generate personalized survey URLs
 - **Professional Code Organization**: Modular structure with mixin pattern for easy maintenance and extension
 
 ## Code Organization
@@ -263,6 +264,74 @@ block_id = block['BlockID']
 blocks = api.get_blocks(survey_id)
 ```
 
+### Embedded Data
+
+#### Set Individual Embedded Data Field
+```python
+# Define a field that will receive values from URL parameters
+api.set_embedded_data(survey_id, "customer_id", field_type="text")
+
+# Set a field with a default value
+api.set_embedded_data(survey_id, "source", field_type="text", value="direct")
+```
+
+#### Set Multiple Embedded Data Fields
+```python
+api.set_embedded_data_fields(
+    survey_id,
+    fields={
+        "user_id": {"type": "text"},
+        "department": {"type": "text"},
+        "score": {"type": "number"},
+        "signup_date": {"type": "date"}
+    }
+)
+```
+
+#### Dynamic Values (Random Numbers, Piped Text)
+```python
+# Set at START of flow (evaluated before questions)
+api.set_embedded_data_fields(
+    survey_id,
+    fields={
+        "lottery_number": {"type": "text", "value": "${rand://int/1:1000}"},
+        "random_group": {"type": "text", "value": "${rand://int/1:3}"}
+    },
+    position="start"
+)
+
+# Capture question answers at END of flow
+api.set_embedded_data_fields(
+    survey_id,
+    fields={
+        "user_role": {"type": "text", "value": "${q://QID1/ChoiceGroup/SelectedChoices}"},
+        "user_name": {"type": "text", "value": "${q://QID2/ChoiceTextEntryValue}"}
+    },
+    position="end"
+)
+```
+
+#### Generate Personalized Survey URL
+```python
+url = api.get_survey_url_with_embedded_data(
+    survey_id,
+    embedded_data={
+        "customer_id": "CUST-12345",
+        "source": "email_campaign"
+    }
+)
+# Returns: https://datacenter.qualtrics.com/jfe/form/SV_xxx?customer_id=CUST-12345&source=email_campaign
+```
+
+#### Get and Delete Embedded Data
+```python
+# Get all embedded data fields
+fields = api.get_embedded_data(survey_id)
+
+# Delete a field
+api.delete_embedded_data(survey_id, "field_to_remove")
+```
+
 ## Running the Example
 
 The `main.py` file contains a comprehensive example that creates a survey with all question types:
@@ -312,6 +381,14 @@ api = QualtricsAPI(api_token: str, data_center: str)
 #### Block Operations
 - `create_block(survey_id, block_name)` - Create a new block
 - `get_blocks(survey_id)` - Get all blocks
+
+#### Embedded Data Operations
+- `set_embedded_data(survey_id, field_name, field_type, value, position)` - Set individual field
+- `set_embedded_data_fields(survey_id, fields, position)` - Set multiple fields at once
+- `get_embedded_data(survey_id)` - Get all embedded data fields
+- `delete_embedded_data(survey_id, field_name)` - Delete a field
+- `get_survey_url_with_embedded_data(survey_id, embedded_data)` - Generate personalized URL
+- `get_survey_flow(survey_id)` - Get the survey flow structure
 
 **Note:** All question creation methods accept an optional `block_id` parameter to specify which block to add the question to. See [docs/BLOCKS_GUIDE.md](docs/BLOCKS_GUIDE.md) for details.
 
