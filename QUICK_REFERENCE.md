@@ -148,6 +148,49 @@ question = api.get_question(survey_id, question_id)
 questions = api.get_survey_questions(survey_id)
 ```
 
+## Response Management
+
+### Get Response Count
+```python
+count = api.get_response_count(survey_id)
+```
+
+### Get Response Statistics
+```python
+stats = api.get_response_statistics(survey_id)
+# Returns: total, complete, incomplete, completion_rate
+```
+
+### List Responses
+```python
+result = api.list_responses(
+    survey_id,
+    start_date="2024-01-01T00:00:00Z",
+    limit=100
+)
+```
+
+### Export to CSV
+```python
+api.export_responses_to_file(survey_id, "responses.csv", format="csv")
+```
+
+### Export to JSON
+```python
+api.export_responses_to_file(survey_id, "responses.json", format="json")
+```
+
+### Export Formats
+- `"csv"` - Comma-separated values
+- `"json"` - JSON format
+- `"spss"` - SPSS data file
+- `"xml"` - XML format
+
+### Delete Response
+```python
+api.delete_response(survey_id, response_id)
+```
+
 ## Selector Options for Multiple Choice
 
 - `"SAVR"` - Single Answer Vertical (Radio - Vertical)

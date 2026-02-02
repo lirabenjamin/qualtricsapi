@@ -8,6 +8,7 @@ from .surveys import SurveyMixin
 from .questions import QuestionMixin
 from .question_management import QuestionManagementMixin
 from .blocks import BlockMixin
+from .responses import ResponseMixin
 
 
 class QualtricsAPI(
@@ -15,7 +16,8 @@ class QualtricsAPI(
     SurveyMixin,
     QuestionMixin,
     QuestionManagementMixin,
-    BlockMixin
+    BlockMixin,
+    ResponseMixin
 ):
     """
     Main Qualtrics API client.
@@ -26,6 +28,7 @@ class QualtricsAPI(
     - QuestionMixin: Question creation for all question types
     - QuestionManagementMixin: Question updates and deletions
     - BlockMixin: Block operations
+    - ResponseMixin: Response management and export operations
 
     Usage:
         >>> from qualtrics_sdk import QualtricsAPI
@@ -44,5 +47,11 @@ class QualtricsAPI(
         >>>
         >>> # Get survey URL
         >>> url = api.get_survey_url(survey_id)
+        >>>
+        >>> # Export responses
+        >>> api.export_responses_to_file(survey_id, "responses.csv", format="csv")
+        >>>
+        >>> # Get response statistics
+        >>> stats = api.get_response_statistics(survey_id)
     """
     pass  # All methods inherited from mixins!

@@ -5,6 +5,11 @@ A comprehensive Python wrapper for the Qualtrics REST API v3. This module provid
 ## Features
 
 - **Survey Management**: Create, read, update, and delete surveys
+- **Response Management**: Export, retrieve, and manage survey responses
+  - Export responses in CSV, JSON, SPSS, and XML formats
+  - Get response counts and statistics
+  - List and filter responses by date and status
+  - Delete individual or bulk responses
 - **Question Types**: Support for all major question types:
   - Multiple choice (radio buttons)
   - Checkboxes (multiple answers)
@@ -30,6 +35,7 @@ qualtrics_sdk/core/
 ├── questions.py         - Question creation (all types)
 ├── question_management.py - Question updates/deletes
 ├── blocks.py            - Block operations
+├── responses.py         - Response management & export
 └── client.py            - Combines all functionality
 ```
 
@@ -263,6 +269,66 @@ block_id = block['BlockID']
 blocks = api.get_blocks(survey_id)
 ```
 
+### Response Management
+
+#### Get Response Count
+```python
+count = api.get_response_count(survey_id)
+print(f"Total responses: {count}")
+```
+
+#### Get Response Statistics
+```python
+stats = api.get_response_statistics(survey_id)
+print(f"Total: {stats['total']}")
+print(f"Complete: {stats['complete']}")
+print(f"Completion rate: {stats['completion_rate']}%")
+```
+
+#### List Responses with Filtering
+```python
+# Get recent responses
+result = api.list_responses(
+    survey_id,
+    start_date="2024-01-01T00:00:00Z",
+    limit=100
+)
+for response in result['responses']:
+    print(response['responseId'])
+```
+
+#### Export Responses to File
+```python
+# Export as CSV
+api.export_responses_to_file(survey_id, "responses.csv", format="csv")
+
+# Export as JSON
+api.export_responses_to_file(survey_id, "responses.json", format="json")
+
+# Export as SPSS
+api.export_responses_to_file(survey_id, "responses.sav", format="spss")
+
+# Export as XML
+api.export_responses_to_file(survey_id, "responses.xml", format="xml")
+```
+
+#### Export Responses (Raw Bytes)
+```python
+# Get raw export data for custom processing
+data = api.export_responses(survey_id, format="csv")
+# data is bytes - process as needed
+```
+
+#### Delete Response
+```python
+# Delete a single response
+api.delete_response(survey_id, response_id)
+
+# Delete multiple responses
+result = api.delete_responses(survey_id, [response_id1, response_id2])
+print(f"Deleted: {result['deleted']}")
+```
+
 ## Running the Example
 
 The `main.py` file contains a comprehensive example that creates a survey with all question types:
@@ -312,6 +378,19 @@ api = QualtricsAPI(api_token: str, data_center: str)
 #### Block Operations
 - `create_block(survey_id, block_name)` - Create a new block
 - `get_blocks(survey_id)` - Get all blocks
+
+#### Response Operations
+- `get_response_count(survey_id)` - Get total response count
+- `get_response_statistics(survey_id)` - Get response statistics (total, complete, incomplete, completion rate)
+- `list_responses(survey_id, start_date, end_date, status, limit, offset)` - List responses with filtering
+- `get_response(survey_id, response_id)` - Get a single response
+- `export_responses(survey_id, format, start_date, end_date, ...)` - Export responses as bytes
+- `export_responses_to_file(survey_id, file_path, format, ...)` - Export responses to file
+- `delete_response(survey_id, response_id)` - Delete a single response
+- `delete_responses(survey_id, response_ids)` - Delete multiple responses
+- `get_response_schema(survey_id)` - Get response data schema
+
+**Export Formats Supported:** CSV, JSON, SPSS, XML
 
 **Note:** All question creation methods accept an optional `block_id` parameter to specify which block to add the question to. See [docs/BLOCKS_GUIDE.md](docs/BLOCKS_GUIDE.md) for details.
 

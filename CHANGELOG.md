@@ -13,7 +13,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Loop and merge functionality
 - Custom JavaScript for questions
 - Distribution management
-- Response data retrieval
+
+## [0.2.0] - 2026-02-02
+
+### Added
+- **Response Management & Export Support** (#4)
+  - `get_response_count(survey_id)` - Get total response count for a survey
+  - `get_response_statistics(survey_id)` - Get summary statistics (total, complete, incomplete, completion rate)
+  - `list_responses(survey_id, ...)` - List responses with filtering by date, status, and pagination
+  - `get_response(survey_id, response_id)` - Get a single response by ID
+  - `export_responses(survey_id, format, ...)` - Export responses as bytes with async polling
+  - `export_responses_to_file(survey_id, file_path, format, ...)` - Export responses directly to file
+  - `delete_response(survey_id, response_id)` - Delete a single response
+  - `delete_responses(survey_id, response_ids)` - Bulk delete multiple responses
+  - `get_response_schema(survey_id)` - Get response data schema
+- New `ResponseMixin` class in `qualtrics_sdk/core/responses.py`
+- Support for export formats: CSV, JSON, SPSS, XML
+- New example file: `examples/responses_example.py`
+- Comprehensive tests for response management
+
+### Changed
+- Updated `QualtricsAPI` client to include `ResponseMixin`
+- Updated documentation with response management examples
 
 ## [0.1.0] - 2026-02-01
 
