@@ -12,6 +12,26 @@ import re
 class EmbeddedDataMixin:
     """Mixin providing embedded data operations for Qualtrics surveys"""
 
+    def get_survey_flow(self, survey_id: str) -> Dict[str, Any]:
+        """
+        Get the raw survey flow structure (for debugging).
+
+        Args:
+            survey_id: The survey ID
+
+        Returns:
+            The complete flow structure from the API
+        """
+        flow_response = requests.get(
+            f'{self.base_url}/survey-definitions/{survey_id}/flow',
+            headers=self.headers
+        )
+
+        if flow_response.status_code != 200:
+            raise Exception(f"Failed to get survey flow: {flow_response.text}")
+
+        return flow_response.json()['result']
+
     def _get_next_flow_id(self, flow_list: List[Dict]) -> str:
         """Generate a unique FlowID by finding the max existing ID and incrementing."""
         max_id = 0
