@@ -348,22 +348,64 @@ def example_dynamic_values():
     )
     print(f"Configured {result2['count']} END embedded data fields (question captures)")
 
-    # STEP 4: Add a thank you message that uses the START embedded data
-    # NOTE: Only values set at position="start" can be displayed in the survey,
-    # because questions and messages are inside a Block that comes BEFORE
-    # the "end" embedded data in the flow.
-    # The "end" embedded data (respondent_name, user_role) captures question
-    # answers and is available in the data export, but not within the survey.
+    # STEP 4: Create a NEW BLOCK for the thank you message
+    # This block will be added to the flow AFTER the END embedded data,
+    # so it can display all captured values including name and role.
+    thank_you_block = api.create_block(survey_id, "Thank You Block")
+    thank_you_block_id = thank_you_block.get('BlockID')
+    print(f"Created thank you block: {thank_you_block_id}")
+
+    # Add the thank you message to the new block
+    # Now we can display ALL embedded data including the captured values!
     api.create_descriptive_text(
         survey_id,
         """
-        <h3>Thank you for completing the survey!</h3>
+        <h3>Thank you, ${e://Field/respondent_name}!</h3>
         <p>Your response has been recorded.</p>
         <p>Your lottery number is: <strong>${e://Field/lottery_number}</strong></p>
         <p>You were assigned to group: ${e://Field/random_group}</p>
+        <p>Your role: ${e://Field/user_role}</p>
         <p>Survey version: ${e://Field/survey_version}</p>
-        """
+        <p>Completed on: ${e://Field/completion_date}</p>
+        """,
+        block_id=thank_you_block_id
     )
+
+    # STEP 5: Move the thank you block to the END of the flow (after END embedded data)
+    # Get current flow and reorder it
+    flow = api.get_survey_flow(survey_id)
+    flow_list = flow.get('Flow', [])
+
+    # Find and remove the thank you block from its current position
+    thank_you_flow_element = None
+    new_flow_list = []
+    for element in flow_list:
+        if element.get('ID') == thank_you_block_id:
+            thank_you_flow_element = element
+        else:
+            new_flow_list.append(element)
+
+    # Add it back at the very end
+    if thank_you_flow_element:
+        new_flow_list.append(thank_you_flow_element)
+
+    # Update the flow
+    import requests
+    update_payload = {
+        "FlowID": flow.get('FlowID'),
+        "Type": flow.get('Type'),
+        "Flow": new_flow_list,
+        "Properties": flow.get('Properties', {})
+    }
+    response = requests.put(
+        f'{api.base_url}/survey-definitions/{survey_id}/flow',
+        headers=api.headers,
+        json=update_payload
+    )
+    if response.status_code == 200:
+        print("Moved thank you block to end of flow")
+    else:
+        print(f"Warning: Could not reorder flow: {response.text}")
 
     # Retrieve and display the embedded data configuration
     fields = api.get_embedded_data(survey_id)
@@ -377,11 +419,10 @@ def example_dynamic_values():
     url = api.get_survey_url(survey_id)
     print(f"\nSurvey URL: {url}")
     print("\nFlow order:")
-    print("  1. START embedded data (random_group, lottery_number, etc.) - EVALUATED FIRST")
-    print("  2. Block containing: questions + thank you message")
-    print("  3. END embedded data (user_role, respondent_name) - captures answers for export")
-    print("\nNOTE: The thank you message can only display START values (lottery_number, etc.)")
-    print("      END values (user_role, respondent_name) are captured AFTER the Block")
+    print("  1. START embedded data (random_group, lottery_number, etc.)")
+    print("  2. Questions block (role question, name question)")
+    print("  3. END embedded data (captures user_role, respondent_name from answers)")
+    print("  4. Thank You block (can display ALL embedded data including captured values)")
 
     return survey_id
 
