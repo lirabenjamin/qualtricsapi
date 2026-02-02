@@ -348,15 +348,20 @@ def example_dynamic_values():
     )
     print(f"Configured {result2['count']} END embedded data fields (question captures)")
 
-    # STEP 4: Add a thank you message that uses the embedded data
+    # STEP 4: Add a thank you message that uses the START embedded data
+    # NOTE: Only values set at position="start" can be displayed in the survey,
+    # because questions and messages are inside a Block that comes BEFORE
+    # the "end" embedded data in the flow.
+    # The "end" embedded data (respondent_name, user_role) captures question
+    # answers and is available in the data export, but not within the survey.
     api.create_descriptive_text(
         survey_id,
         """
-        <h3>Thank you, ${e://Field/respondent_name}!</h3>
+        <h3>Thank you for completing the survey!</h3>
         <p>Your response has been recorded.</p>
         <p>Your lottery number is: <strong>${e://Field/lottery_number}</strong></p>
         <p>You were assigned to group: ${e://Field/random_group}</p>
-        <p>Your role: ${e://Field/user_role}</p>
+        <p>Survey version: ${e://Field/survey_version}</p>
         """
     )
 
@@ -372,10 +377,11 @@ def example_dynamic_values():
     url = api.get_survey_url(survey_id)
     print(f"\nSurvey URL: {url}")
     print("\nFlow order:")
-    print("  1. START embedded data (random_group, lottery_number, etc.)")
-    print("  2. Questions (role, name)")
-    print("  3. END embedded data (user_role, respondent_name - captures answers)")
-    print("  4. Thank you message")
+    print("  1. START embedded data (random_group, lottery_number, etc.) - EVALUATED FIRST")
+    print("  2. Block containing: questions + thank you message")
+    print("  3. END embedded data (user_role, respondent_name) - captures answers for export")
+    print("\nNOTE: The thank you message can only display START values (lottery_number, etc.)")
+    print("      END values (user_role, respondent_name) are captured AFTER the Block")
 
     return survey_id
 
