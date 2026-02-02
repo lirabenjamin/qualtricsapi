@@ -17,6 +17,11 @@ A comprehensive Python wrapper for the Qualtrics REST API v3. This module provid
   - Descriptive text blocks
 - **Question Management**: Add, update, and delete questions
 - **Block Management**: Create and manage survey blocks
+- **Randomization Support**: Comprehensive randomization capabilities:
+  - Block-level randomization with even presentation
+  - Question-level randomization within blocks
+  - Choice-level randomization with anchor options
+  - Subset randomization for partial display
 - **Professional Code Organization**: Modular structure with mixin pattern for easy maintenance and extension
 
 ## Code Organization
@@ -30,6 +35,7 @@ qualtrics_sdk/core/
 ├── questions.py         - Question creation (all types)
 ├── question_management.py - Question updates/deletes
 ├── blocks.py            - Block operations
+├── randomization.py     - Randomization features
 └── client.py            - Combines all functionality
 ```
 
@@ -314,6 +320,12 @@ api = QualtricsAPI(api_token: str, data_center: str)
 - `get_blocks(survey_id)` - Get all blocks
 
 **Note:** All question creation methods accept an optional `block_id` parameter to specify which block to add the question to. See [docs/BLOCKS_GUIDE.md](docs/BLOCKS_GUIDE.md) for details.
+
+#### Randomization Operations
+- `randomize_blocks(survey_id, block_ids, randomization_type, evenly_present, subset_count)` - Randomize block presentation order
+- `randomize_questions_in_block(survey_id, block_id, randomize, subset_count)` - Randomize question order within a block
+- `randomize_question_choices(survey_id, question_id, randomize, anchor_choices, anchor_last)` - Randomize answer choices
+- `get_randomization_settings(survey_id)` - Get all randomization settings for a survey
 
 ## Question Type Reference
 

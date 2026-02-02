@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Randomization Support** (#2) - New `RandomizationMixin` with comprehensive randomization features:
+  - `randomize_blocks()` - Block-level randomization with even presentation and subset support
+  - `randomize_questions_in_block()` - Question-level randomization within blocks
+  - `randomize_question_choices()` - Choice-level randomization with anchor options
+  - `get_randomization_settings()` - Retrieve all randomization settings for a survey
+- New randomization example (`examples/randomization_example.py`)
+- Unit tests for randomization features (`tests/test_randomization.py`)
+
 ### Planned
 - Embedded data support
-- Survey flow management
 - Loop and merge functionality
 - Custom JavaScript for questions
 - Distribution management

@@ -148,6 +148,54 @@ question = api.get_question(survey_id, question_id)
 questions = api.get_survey_questions(survey_id)
 ```
 
+## Randomization
+
+### Randomize Blocks (Present Sections in Random Order)
+```python
+api.randomize_blocks(
+    survey_id,
+    block_ids=["BL_001", "BL_002", "BL_003"],
+    evenly_present=True  # Balanced distribution
+)
+```
+
+### Randomize Questions in a Block
+```python
+api.randomize_questions_in_block(
+    survey_id,
+    block_id="BL_001",
+    randomize=True,
+    subset_count=5  # Optional: show only 5 random questions
+)
+```
+
+### Randomize Answer Choices
+```python
+# Randomize but keep "Other" at the end
+api.randomize_question_choices(
+    survey_id,
+    question_id="QID1",
+    randomize=True,
+    anchor_last=True
+)
+
+# Anchor specific choices
+api.randomize_question_choices(
+    survey_id,
+    question_id="QID2",
+    randomize=True,
+    anchor_choices=["1", "5"]  # Keep choices 1 and 5 in place
+)
+```
+
+### Get Randomization Settings
+```python
+settings = api.get_randomization_settings(survey_id)
+print(settings['block_randomization'])
+print(settings['question_randomization'])
+print(settings['choice_randomization'])
+```
+
 ## Selector Options for Multiple Choice
 
 - `"SAVR"` - Single Answer Vertical (Radio - Vertical)

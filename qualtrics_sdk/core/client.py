@@ -8,6 +8,7 @@ from .surveys import SurveyMixin
 from .questions import QuestionMixin
 from .question_management import QuestionManagementMixin
 from .blocks import BlockMixin
+from .randomization import RandomizationMixin
 
 
 class QualtricsAPI(
@@ -15,7 +16,8 @@ class QualtricsAPI(
     SurveyMixin,
     QuestionMixin,
     QuestionManagementMixin,
-    BlockMixin
+    BlockMixin,
+    RandomizationMixin
 ):
     """
     Main Qualtrics API client.
@@ -26,6 +28,7 @@ class QualtricsAPI(
     - QuestionMixin: Question creation for all question types
     - QuestionManagementMixin: Question updates and deletions
     - BlockMixin: Block operations
+    - RandomizationMixin: Randomization for blocks, questions, and choices
 
     Usage:
         >>> from qualtrics_sdk import QualtricsAPI
