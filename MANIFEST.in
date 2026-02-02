@@ -1,0 +1,9 @@
+include README.md
+include LICENSE
+include requirements.txt
+include .env.example
+recursive-include qualtrics_sdk *.py
+recursive-include docs *.md
+recursive-include examples *.py
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
