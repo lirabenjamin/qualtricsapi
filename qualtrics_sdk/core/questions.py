@@ -225,7 +225,7 @@ class QuestionMixin:
             "Selector": "HSLIDER",
             "Configuration": {
                 "QuestionDescriptionOption": "UseText",
-                "GridLines": max_value - min_value + 1,
+                "GridLines": 0,  # Set to 0 to only show min/max labels
                 "NumDecimals": "0",
                 "ShowValue": True
             },
@@ -233,8 +233,17 @@ class QuestionMixin:
                 "1": {
                     "Display": question_text
                 }
-            }
+            },
+            "ChoiceOrder": [1]
         }
+
+        # Add labels if provided
+        if left_label or right_label:
+            question_data["Labels"] = {}
+            if left_label:
+                question_data["Labels"][str(min_value)] = {"Display": left_label}
+            if right_label:
+                question_data["Labels"][str(max_value)] = {"Display": right_label}
 
         # Build URL and params (block_id as query parameter)
         url = f'{self.base_url}/survey-definitions/{survey_id}/questions'
