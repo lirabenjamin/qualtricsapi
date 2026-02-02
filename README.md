@@ -17,6 +17,10 @@ A comprehensive Python wrapper for the Qualtrics REST API v3. This module provid
   - Descriptive text blocks
 - **Question Management**: Add, update, and delete questions
 - **Block Management**: Create and manage survey blocks
+- **Display Logic**: Create conditional questions that show/hide based on responses
+  - Single and multiple condition logic with AND/OR operators
+  - Support for all comparison operators (Selected, EqualTo, GreaterThan, Contains, etc.)
+  - Helper methods for common patterns (show_only_if, skip_if)
 - **Embedded Data**: Configure embedded data fields and generate personalized survey URLs
 - **Professional Code Organization**: Modular structure with mixin pattern for easy maintenance and extension
 
@@ -26,12 +30,14 @@ This package uses a clean, modular structure for easy navigation and maintenance
 
 ```
 qualtrics_sdk/core/
-├── base.py              - Core API & authentication
-├── surveys.py           - Survey operations
-├── questions.py         - Question creation (all types)
-├── question_management.py - Question updates/deletes
-├── blocks.py            - Block operations
-└── client.py            - Combines all functionality
+├── base.py                 - Core API & authentication
+├── surveys.py              - Survey operations
+├── questions.py            - Question creation (all types)
+├── question_management.py  - Question updates/deletes
+├── blocks.py               - Block operations
+├── display_logic.py        - Display logic / conditional questions
+├── embedded_data.py        - Embedded data operations
+└── client.py               - Combines all functionality
 ```
 
 **Benefits:** Easy to find code, test independently, and extend with new features.
@@ -262,6 +268,95 @@ block_id = block['BlockID']
 #### Get All Blocks
 ```python
 blocks = api.get_blocks(survey_id)
+```
+
+### Display Logic (Conditional Questions)
+
+Display logic allows you to show or hide questions based on respondent answers, creating dynamic, adaptive surveys.
+
+**Important:** For display logic to work correctly:
+1. Questions must be in **separate blocks** (blocks create automatic page breaks)
+2. The source question must be answered before the conditional question is evaluated
+
+#### Simple Display Logic
+```python
+# Show Q2 only if "Yes" (choice 1) is selected in Q1
+api.add_display_logic(
+    survey_id=survey_id,
+    question_id="QID2",
+    source_question_id="QID1",
+    operator="Selected",
+    choice_locator="q://QID1/SelectableChoice/1"
+)
+```
+
+#### Numeric Comparisons
+```python
+# Show follow-up question if satisfaction score < 50
+api.add_display_logic(
+    survey_id=survey_id,
+    question_id="QID4",
+    source_question_id="QID3",  # Slider question
+    operator="LessThan",
+    value=50
+)
+```
+
+#### Multiple Conditions (AND/OR)
+```python
+# Show Q6 only if both Product A AND Product B are selected in Q5
+api.add_display_logic_multiple(
+    survey_id=survey_id,
+    question_id="QID6",
+    conditions=[
+        {
+            "source_question_id": "QID5",
+            "operator": "Selected",
+            "choice_locator": "q://QID5/SelectableChoice/1"  # Product A
+        },
+        {
+            "source_question_id": "QID5",
+            "operator": "Selected",
+            "choice_locator": "q://QID5/SelectableChoice/2"  # Product B
+        }
+    ],
+    conjunction="AND"  # or "OR"
+)
+```
+
+#### Helper Methods
+```python
+# Semantic alias for clarity
+api.show_only_if(
+    survey_id=survey_id,
+    question_id="QID2",
+    source_question_id="QID1",
+    operator="Selected",
+    choice_locator="q://QID1/SelectableChoice/1"
+)
+
+# Skip logic (inverse of display logic)
+api.skip_if(
+    survey_id=survey_id,
+    question_id="QID3",
+    source_question_id="QID2",
+    operator="Selected",
+    choice_locator="q://QID2/SelectableChoice/2"  # "No"
+)
+```
+
+#### Supported Operators
+- **Choice-based:** `Selected`, `NotSelected`, `Displayed`, `NotDisplayed`
+- **Numeric:** `EqualTo`, `NotEqualTo`, `GreaterThan`, `LessThan`, `GreaterOrEqual`, `LessOrEqual`
+- **Text:** `Contains`, `DoesNotContain`, `MatchesRegex`, `Empty`, `NotEmpty`
+
+#### Get and Delete Display Logic
+```python
+# Get display logic for a question
+logic = api.get_display_logic(survey_id, question_id)
+
+# Remove display logic
+api.delete_display_logic(survey_id, question_id)
 ```
 
 ### Embedded Data
