@@ -64,6 +64,7 @@ class QuestionMixin:
             "QuestionText": question_text,
             "QuestionType": "MC",
             "Selector": selector,
+            "SubSelector": "TX",
             "Choices": choices_dict,
             "Configuration": {
                 "QuestionDescriptionOption": "UseText"
@@ -114,6 +115,7 @@ class QuestionMixin:
             "DataExportTag": data_export_tag,
             "QuestionType": "TE",
             "Selector": text_type,
+            "SubSelector": "TX",
             "Configuration": {
                 "QuestionDescriptionOption": "UseText"
             }
@@ -222,6 +224,7 @@ class QuestionMixin:
             "DataExportTag": data_export_tag,
             "QuestionType": "Slider",
             "Selector": "HSLIDER",
+            "SubSelector": "TX",
             "Configuration": {
                 "QuestionDescriptionOption": "UseText",
                 "GridLines": max_value - min_value + 1,
@@ -282,6 +285,7 @@ class QuestionMixin:
             "DataExportTag": data_export_tag,
             "QuestionType": "RO",
             "Selector": "DND",  # Drag and Drop
+            "SubSelector": "TX",
             "Choices": choices_dict,
             "Configuration": {
                 "QuestionDescriptionOption": "UseText"
@@ -332,6 +336,7 @@ class QuestionMixin:
             "QuestionText": question_text,
             "QuestionType": "MC",
             "Selector": "SAHR",  # Single answer horizontal
+            "SubSelector": "TX",
             "Choices": choices_dict,
             "Configuration": {
                 "QuestionDescriptionOption": "UseText"
@@ -373,6 +378,7 @@ class QuestionMixin:
             "QuestionText": text,
             "QuestionType": "DB",
             "Selector": "TB",
+            "SubSelector": "TX",
             "Configuration": {
                 "QuestionDescriptionOption": "UseText"
             }
