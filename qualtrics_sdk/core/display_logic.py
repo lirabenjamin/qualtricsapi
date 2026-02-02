@@ -131,7 +131,6 @@ class DisplayLogicMixin:
             'inPage': False,
             '0': {
                 'Type': 'If',
-                'Description': 'If',
                 '0': condition
             }
         }
@@ -139,9 +138,10 @@ class DisplayLogicMixin:
         # Get current question data first
         current_question = self.get_question(survey_id, question_id)
 
-        # Update question with display logic
+        # Update question with display logic - MUST include DataExportTag
         question_data = {
             'QuestionText': current_question.get('QuestionText', ''),
+            'DataExportTag': current_question.get('DataExportTag', f'Q{question_id}'),
             'QuestionType': current_question.get('QuestionType'),
             'Selector': current_question.get('Selector'),
             'DisplayLogic': display_logic
@@ -158,6 +158,10 @@ class DisplayLogicMixin:
         # Include Answers if present (for matrix questions)
         if current_question.get('Answers'):
             question_data['Answers'] = current_question['Answers']
+
+        # Include ChoiceOrder if present
+        if current_question.get('ChoiceOrder'):
+            question_data['ChoiceOrder'] = current_question['ChoiceOrder']
 
         response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/questions/{question_id}',
@@ -232,12 +236,12 @@ class DisplayLogicMixin:
                 value=cond.get('value')
             )
             if i > 0:
-                built_conditions[str(i)]['Conjuction'] = conjunction  # Note: Qualtrics API uses this spelling
+                # Qualtrics API requires "And" or "Or" (capitalized first letter only)
+                built_conditions[str(i)]['Conjunction'] = conjunction.capitalize()
 
         # Build the expression
         if_block = {
-            'Type': 'If',
-            'Description': 'If'
+            'Type': 'If'
         }
         if_block.update(built_conditions)
 
@@ -250,9 +254,10 @@ class DisplayLogicMixin:
         # Get current question data first
         current_question = self.get_question(survey_id, question_id)
 
-        # Update question with display logic
+        # Update question with display logic - MUST include DataExportTag
         question_data = {
             'QuestionText': current_question.get('QuestionText', ''),
+            'DataExportTag': current_question.get('DataExportTag', f'Q{question_id}'),
             'QuestionType': current_question.get('QuestionType'),
             'Selector': current_question.get('Selector'),
             'DisplayLogic': display_logic
@@ -269,6 +274,10 @@ class DisplayLogicMixin:
         # Include Answers if present (for matrix questions)
         if current_question.get('Answers'):
             question_data['Answers'] = current_question['Answers']
+
+        # Include ChoiceOrder if present
+        if current_question.get('ChoiceOrder'):
+            question_data['ChoiceOrder'] = current_question['ChoiceOrder']
 
         response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/questions/{question_id}',
@@ -428,9 +437,10 @@ class DisplayLogicMixin:
         # Get current question data first
         current_question = self.get_question(survey_id, question_id)
 
-        # Update question without display logic
+        # Update question without display logic - MUST include DataExportTag
         question_data = {
             'QuestionText': current_question.get('QuestionText', ''),
+            'DataExportTag': current_question.get('DataExportTag', f'Q{question_id}'),
             'QuestionType': current_question.get('QuestionType'),
             'Selector': current_question.get('Selector'),
             'DisplayLogic': None
@@ -447,6 +457,10 @@ class DisplayLogicMixin:
         # Include Answers if present (for matrix questions)
         if current_question.get('Answers'):
             question_data['Answers'] = current_question['Answers']
+
+        # Include ChoiceOrder if present
+        if current_question.get('ChoiceOrder'):
+            question_data['ChoiceOrder'] = current_question['ChoiceOrder']
 
         response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/questions/{question_id}',
@@ -505,7 +519,6 @@ class DisplayLogicMixin:
             'inPage': False,
             '0': {
                 'Type': 'If',
-                'Description': 'If',
                 '0': condition
             }
         }
@@ -513,9 +526,10 @@ class DisplayLogicMixin:
         # Get current question data first
         current_question = self.get_question(survey_id, question_id)
 
-        # Update question with display logic
+        # Update question with display logic - MUST include DataExportTag
         question_data = {
             'QuestionText': current_question.get('QuestionText', ''),
+            'DataExportTag': current_question.get('DataExportTag', f'Q{question_id}'),
             'QuestionType': current_question.get('QuestionType'),
             'Selector': current_question.get('Selector'),
             'DisplayLogic': display_logic
@@ -532,6 +546,10 @@ class DisplayLogicMixin:
         # Include Answers if present (for matrix questions)
         if current_question.get('Answers'):
             question_data['Answers'] = current_question['Answers']
+
+        # Include ChoiceOrder if present
+        if current_question.get('ChoiceOrder'):
+            question_data['ChoiceOrder'] = current_question['ChoiceOrder']
 
         response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/questions/{question_id}',
