@@ -66,6 +66,8 @@ class DisplayLogicMixin:
 
             if choice_locator:
                 condition['ChoiceLocator'] = choice_locator
+                condition['QuestionIDFromLocator'] = question_id
+                condition['LeftOperand'] = choice_locator
                 condition['Operator'] = operator
             else:
                 condition['LeftOperand'] = f'q://{question_id}/SelectableChoice'

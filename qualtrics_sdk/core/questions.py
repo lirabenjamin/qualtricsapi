@@ -60,12 +60,16 @@ class QuestionMixin:
             elif selector == "SAHR":
                 selector = "MAHR"
 
+        # Build choice order (list of choice IDs in order)
+        choice_order = [str(i) for i in range(1, len(choices) + 1)]
+
         question_data = {
             "QuestionText": question_text,
             "QuestionType": "MC",
             "Selector": selector,
             "SubSelector": "TX",
             "Choices": choices_dict,
+            "ChoiceOrder": choice_order,
             "Configuration": {
                 "QuestionDescriptionOption": "UseText"
             }
