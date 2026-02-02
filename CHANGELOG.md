@@ -7,8 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Embedded data support** (#1)
+  - `set_embedded_data()` - Configure individual embedded data fields with type specifications (text, number, date)
+  - `set_embedded_data_fields()` - Configure multiple fields simultaneously via dictionary, with `position` parameter for flow placement ("start" or "end")
+  - `get_embedded_data()` - Retrieve all embedded data fields configured in a survey
+  - `delete_embedded_data()` - Delete an embedded data field from a survey
+  - `get_survey_url_with_embedded_data()` - Generate survey links pre-populated with embedded data values
+  - `get_survey_flow()` - Retrieve the full survey flow structure
+  - Support for dynamic values: random numbers (`${rand://int/min:max}`), piped text from questions (`${q://QID/ChoiceTextEntryValue}`), dates, etc.
+- New `EmbeddedDataMixin` module following the existing mixin pattern
+- Example file: `examples/embedded_data_example.py` with 5 comprehensive examples
+- Unit tests for embedded data functionality (17 tests)
+
 ### Planned
-- Embedded data support
 - Survey flow management
 - Loop and merge functionality
 - Custom JavaScript for questions

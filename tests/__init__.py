@@ -1,1 +1,1 @@
-"""Tests for the Qualtrics SDK"""
+"""Tests for Qualtrics SDK"""

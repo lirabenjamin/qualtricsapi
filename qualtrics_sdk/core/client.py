@@ -9,6 +9,7 @@ from .questions import QuestionMixin
 from .question_management import QuestionManagementMixin
 from .blocks import BlockMixin
 from .display_logic import DisplayLogicMixin
+from .embedded_data import EmbeddedDataMixin
 
 
 class QualtricsAPI(
@@ -17,7 +18,8 @@ class QualtricsAPI(
     QuestionMixin,
     QuestionManagementMixin,
     BlockMixin,
-    DisplayLogicMixin
+    DisplayLogicMixin,
+    EmbeddedDataMixin
 ):
     """
     Main Qualtrics API client.
@@ -29,6 +31,7 @@ class QualtricsAPI(
     - QuestionManagementMixin: Question updates and deletions
     - BlockMixin: Block operations
     - DisplayLogicMixin: Display logic and conditional display
+    - EmbeddedDataMixin: Embedded data field configuration and URL generation
 
     Usage:
         >>> from qualtrics_sdk import QualtricsAPI
@@ -45,7 +48,16 @@ class QualtricsAPI(
         ...     ["Student", "Faculty", "Staff"]
         ... )
         >>>
-        >>> # Get survey URL
-        >>> url = api.get_survey_url(survey_id)
+        >>> # Set embedded data fields
+        >>> api.set_embedded_data_fields(survey_id, {
+        ...     "user_id": {"type": "text"},
+        ...     "source": {"type": "text", "value": "web"}
+        ... })
+        >>>
+        >>> # Get survey URL with embedded data
+        >>> url = api.get_survey_url_with_embedded_data(
+        ...     survey_id,
+        ...     {"user_id": "12345", "source": "email"}
+        ... )
     """
     pass  # All methods inherited from mixins!

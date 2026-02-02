@@ -80,7 +80,7 @@ q5 = api.create_multiple_choice_question(
     sid,
     "Which products do you use?",
     choices=["Product A", "Product B", "Product C", "None"],
-    selector="MAVR"  # Multiple answer
+    allow_multiple=True  # Multiple answer checkboxes
 )
 q5_id = q5['QuestionID']
 print(f"   Created: {q5_id}")
