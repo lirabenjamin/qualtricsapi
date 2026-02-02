@@ -136,9 +136,28 @@ class DisplayLogicMixin:
             }
         }
 
+        # Get current question data first
+        current_question = self.get_question(survey_id, question_id)
+
+        # Update question with display logic
         question_data = {
+            'QuestionText': current_question.get('QuestionText', ''),
+            'QuestionType': current_question.get('QuestionType'),
+            'Selector': current_question.get('Selector'),
             'DisplayLogic': display_logic
         }
+
+        # Include SubSelector if present
+        if current_question.get('SubSelector'):
+            question_data['SubSelector'] = current_question['SubSelector']
+
+        # Include Choices if present
+        if current_question.get('Choices'):
+            question_data['Choices'] = current_question['Choices']
+
+        # Include Answers if present (for matrix questions)
+        if current_question.get('Answers'):
+            question_data['Answers'] = current_question['Answers']
 
         response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/questions/{question_id}',
@@ -228,9 +247,28 @@ class DisplayLogicMixin:
             '0': if_block
         }
 
+        # Get current question data first
+        current_question = self.get_question(survey_id, question_id)
+
+        # Update question with display logic
         question_data = {
+            'QuestionText': current_question.get('QuestionText', ''),
+            'QuestionType': current_question.get('QuestionType'),
+            'Selector': current_question.get('Selector'),
             'DisplayLogic': display_logic
         }
+
+        # Include SubSelector if present
+        if current_question.get('SubSelector'):
+            question_data['SubSelector'] = current_question['SubSelector']
+
+        # Include Choices if present
+        if current_question.get('Choices'):
+            question_data['Choices'] = current_question['Choices']
+
+        # Include Answers if present (for matrix questions)
+        if current_question.get('Answers'):
+            question_data['Answers'] = current_question['Answers']
 
         response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/questions/{question_id}',
@@ -387,9 +425,28 @@ class DisplayLogicMixin:
         Returns:
             True if successful
         """
+        # Get current question data first
+        current_question = self.get_question(survey_id, question_id)
+
+        # Update question without display logic
         question_data = {
+            'QuestionText': current_question.get('QuestionText', ''),
+            'QuestionType': current_question.get('QuestionType'),
+            'Selector': current_question.get('Selector'),
             'DisplayLogic': None
         }
+
+        # Include SubSelector if present
+        if current_question.get('SubSelector'):
+            question_data['SubSelector'] = current_question['SubSelector']
+
+        # Include Choices if present
+        if current_question.get('Choices'):
+            question_data['Choices'] = current_question['Choices']
+
+        # Include Answers if present (for matrix questions)
+        if current_question.get('Answers'):
+            question_data['Answers'] = current_question['Answers']
 
         response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/questions/{question_id}',
@@ -453,9 +510,28 @@ class DisplayLogicMixin:
             }
         }
 
+        # Get current question data first
+        current_question = self.get_question(survey_id, question_id)
+
+        # Update question with display logic
         question_data = {
+            'QuestionText': current_question.get('QuestionText', ''),
+            'QuestionType': current_question.get('QuestionType'),
+            'Selector': current_question.get('Selector'),
             'DisplayLogic': display_logic
         }
+
+        # Include SubSelector if present
+        if current_question.get('SubSelector'):
+            question_data['SubSelector'] = current_question['SubSelector']
+
+        # Include Choices if present
+        if current_question.get('Choices'):
+            question_data['Choices'] = current_question['Choices']
+
+        # Include Answers if present (for matrix questions)
+        if current_question.get('Answers'):
+            question_data['Answers'] = current_question['Answers']
 
         response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/questions/{question_id}',
