@@ -16,7 +16,8 @@ class EmbeddedDataMixin:
         survey_id: str,
         field_name: str,
         field_type: str = "text",
-        value: Optional[str] = None
+        value: Optional[str] = None,
+        position: str = "start"
     ) -> Dict[str, Any]:
         """
         Configure an individual embedded data field in a survey.
@@ -29,6 +30,9 @@ class EmbeddedDataMixin:
             field_name: Name of the embedded data field
             field_type: Type of field - "text", "number", or "date" (default: "text")
             value: Optional default value for the field
+            position: Where to place in flow - "start" or "end" (default: "start")
+                      Use "start" for data passed via URL or static values.
+                      Use "end" for capturing question answers with piped text.
 
         Returns:
             Dictionary with the embedded data field configuration
@@ -40,6 +44,9 @@ class EmbeddedDataMixin:
         valid_types = ["text", "number", "date"]
         if field_type not in valid_types:
             raise ValueError(f"field_type must be one of {valid_types}")
+
+        if position not in ["start", "end"]:
+            raise ValueError("position must be 'start' or 'end'")
 
         # Get current survey flow to add embedded data
         flow_response = requests.get(
@@ -106,8 +113,20 @@ class EmbeddedDataMixin:
                 break
 
         if not embedded_data_exists:
-            # Insert at the beginning of flow (before blocks)
-            flow_list.insert(0, embedded_data_element)
+            # Insert based on position parameter
+            if position == "start":
+                flow_list.insert(0, embedded_data_element)
+            else:  # position == "end"
+                # Find the EndSurvey element if it exists and insert before it
+                end_survey_idx = None
+                for i, element in enumerate(flow_list):
+                    if element.get('Type') == 'EndSurvey':
+                        end_survey_idx = i
+                        break
+                if end_survey_idx is not None:
+                    flow_list.insert(end_survey_idx, embedded_data_element)
+                else:
+                    flow_list.append(embedded_data_element)
 
         current_flow['Flow'] = flow_list
 
@@ -123,6 +142,7 @@ class EmbeddedDataMixin:
                 "field_name": field_name,
                 "field_type": field_type,
                 "value": value,
+                "position": position,
                 "success": True
             }
         else:
@@ -131,7 +151,8 @@ class EmbeddedDataMixin:
     def set_embedded_data_fields(
         self,
         survey_id: str,
-        fields: Dict[str, Dict[str, Any]]
+        fields: Dict[str, Dict[str, Any]],
+        position: str = "start"
     ) -> Dict[str, Any]:
         """
         Configure multiple embedded data fields simultaneously.
@@ -142,6 +163,9 @@ class EmbeddedDataMixin:
                     Each field config can contain:
                     - "type": "text", "number", or "date" (default: "text")
                     - "value": optional default value
+            position: Where to place in flow - "start" or "end" (default: "start")
+                      Use "start" for data passed via URL or static values.
+                      Use "end" for capturing question answers with piped text.
 
         Returns:
             Dictionary with all configured fields
@@ -156,6 +180,8 @@ class EmbeddedDataMixin:
             ...     "start_date": {"type": "date"}
             ... })
         """
+        if position not in ["start", "end"]:
+            raise ValueError("position must be 'start' or 'end'")
         # Get current survey flow
         flow_response = requests.get(
             f'{self.base_url}/survey-definitions/{survey_id}/flow',
@@ -232,7 +258,20 @@ class EmbeddedDataMixin:
                 "FlowID": f"FL_{len(flow_list)+1}",
                 "EmbeddedData": embedded_data_items
             }
-            flow_list.insert(0, embedded_data_element)
+            # Insert based on position parameter
+            if position == "start":
+                flow_list.insert(0, embedded_data_element)
+            else:  # position == "end"
+                # Find the EndSurvey element if it exists and insert before it
+                end_survey_idx = None
+                for i, element in enumerate(flow_list):
+                    if element.get('Type') == 'EndSurvey':
+                        end_survey_idx = i
+                        break
+                if end_survey_idx is not None:
+                    flow_list.insert(end_survey_idx, embedded_data_element)
+                else:
+                    flow_list.append(embedded_data_element)
 
         current_flow['Flow'] = flow_list
 
@@ -247,6 +286,7 @@ class EmbeddedDataMixin:
             return {
                 "fields": list(fields.keys()),
                 "count": len(fields),
+                "position": position,
                 "success": True
             }
         else:

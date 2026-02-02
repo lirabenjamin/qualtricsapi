@@ -273,9 +273,12 @@ def example_dynamic_values():
     - Question answers (piped text)
     - Random numbers
     - Static text values
-    - Calculated values
 
-    These values are set WITHIN the survey flow, not via URL.
+    IMPORTANT: Embedded data placement matters!
+    - position="start": For static values, random numbers, URL parameters
+      (evaluated BEFORE questions are shown)
+    - position="end": For capturing question answers with piped text
+      (evaluated AFTER questions are answered)
     """
     print("\n" + "="*60)
     print("Example 5: Dynamic Embedded Data Values")
@@ -286,54 +289,66 @@ def example_dynamic_values():
     survey_id = survey['SurveyID']
     print(f"\nCreated survey: {survey_id}")
 
-    # First, add some questions that we'll reference
-    q1 = api.create_multiple_choice_question(
-        survey_id,
-        "What is your role?",
-        choices=["Student", "Teacher", "Administrator", "Other"]
-    )
-    print(f"Created role question: {q1.get('QuestionID', 'QID1')}")
-
-    q2 = api.create_text_entry_question(
-        survey_id,
-        "What is your name?",
-        text_type="SL"  # Single line
-    )
-    print(f"Created name question: {q2.get('QuestionID', 'QID2')}")
-
-    # Now set up embedded data with dynamic values
-    # Note: These use Qualtrics piped text syntax
-    result = api.set_embedded_data_fields(
+    # STEP 1: Set embedded data that should be evaluated at the START
+    # (before questions are shown) - static values and random numbers
+    result1 = api.set_embedded_data_fields(
         survey_id,
         fields={
             # Static text value - always the same
             "survey_version": {"type": "text", "value": "v2.1"},
 
-            # Random number between 1-1000 (for A/B testing, random assignment, etc.)
+            # Random number between 1-1000 (for A/B testing, random assignment)
             # Uses Qualtrics syntax: ${rand://int/min:max}
             "random_group": {"type": "text", "value": "${rand://int/1:1000}"},
 
             # Random number for lottery/prize drawing
             "lottery_number": {"type": "text", "value": "${rand://int/100000:999999}"},
 
+            # Response ID for tracking (available at start)
+            "response_id": {"type": "text", "value": "${e://Field/ResponseID}"},
+        },
+        position="start"  # Evaluated before questions
+    )
+    print(f"\nConfigured {result1['count']} START embedded data fields (static/random)")
+
+    # STEP 2: Add questions
+    q1 = api.create_multiple_choice_question(
+        survey_id,
+        "What is your role?",
+        choices=["Student", "Teacher", "Administrator", "Other"]
+    )
+    q1_id = q1.get('QuestionID', 'QID1')
+    print(f"Created role question: {q1_id}")
+
+    q2 = api.create_text_entry_question(
+        survey_id,
+        "What is your name?",
+        text_type="SL"  # Single line
+    )
+    q2_id = q2.get('QuestionID', 'QID2')
+    print(f"Created name question: {q2_id}")
+
+    # STEP 3: Set embedded data that captures question answers
+    # These MUST be at the END of the flow (after questions)
+    result2 = api.set_embedded_data_fields(
+        survey_id,
+        fields={
             # Capture the respondent's role from Q1
             # Uses piped text: ${q://QID/ChoiceGroup/SelectedChoices}
-            "user_role": {"type": "text", "value": "${q://QID1/ChoiceGroup/SelectedChoices}"},
+            "user_role": {"type": "text", "value": f"${{q://{q1_id}/ChoiceGroup/SelectedChoices}}"},
 
             # Capture the respondent's name from Q2
             # Uses piped text: ${q://QID/TEXT}
-            "respondent_name": {"type": "text", "value": "${q://QID2/TEXT}"},
+            "respondent_name": {"type": "text", "value": f"${{q://{q2_id}/TEXT}}"},
 
-            # Current date/time when survey is taken
+            # Current date/time when survey is completed
             "completion_date": {"type": "text", "value": "${date://CurrentDate/m%2Fd%2FY}"},
-
-            # Response ID for tracking
-            "response_id": {"type": "text", "value": "${e://Field/ResponseID}"},
-        }
+        },
+        position="end"  # Evaluated AFTER questions are answered
     )
-    print(f"\nConfigured {result['count']} dynamic embedded data fields")
+    print(f"Configured {result2['count']} END embedded data fields (question captures)")
 
-    # Add a thank you message that uses the embedded data
+    # STEP 4: Add a thank you message that uses the embedded data
     api.create_descriptive_text(
         survey_id,
         """
@@ -341,22 +356,26 @@ def example_dynamic_values():
         <p>Your response has been recorded.</p>
         <p>Your lottery number is: <strong>${e://Field/lottery_number}</strong></p>
         <p>You were assigned to group: ${e://Field/random_group}</p>
+        <p>Your role: ${e://Field/user_role}</p>
         """
     )
 
     # Retrieve and display the embedded data configuration
     fields = api.get_embedded_data(survey_id)
-    print(f"\nEmbedded data fields configured:")
+    print(f"\nEmbedded data fields configured ({len(fields)} total):")
     for field in fields:
         field_name = field.get('Field', 'unknown')
-        value = field.get('Value', '(captured at runtime)')
+        value = field.get('Value', '(no default)')
         print(f"  - {field_name}: {value}")
 
     # Generate the survey URL
     url = api.get_survey_url(survey_id)
     print(f"\nSurvey URL: {url}")
-    print("\nNote: Dynamic values (random numbers, question answers) are")
-    print("populated when the respondent takes the survey, not in the URL.")
+    print("\nFlow order:")
+    print("  1. START embedded data (random_group, lottery_number, etc.)")
+    print("  2. Questions (role, name)")
+    print("  3. END embedded data (user_role, respondent_name - captures answers)")
+    print("  4. Thank you message")
 
     return survey_id
 
