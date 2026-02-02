@@ -338,8 +338,8 @@ def example_dynamic_values():
             "user_role": {"type": "text", "value": f"${{q://{q1_id}/ChoiceGroup/SelectedChoices}}"},
 
             # Capture the respondent's name from Q2
-            # Uses piped text: ${q://QID/TEXT}
-            "respondent_name": {"type": "text", "value": f"${{q://{q2_id}/TEXT}}"},
+            # Uses piped text: ${q://QID/ChoiceTextEntryValue}
+            "respondent_name": {"type": "text", "value": f"${{q://{q2_id}/ChoiceTextEntryValue}}"},
 
             # Current date/time when survey is completed
             "completion_date": {"type": "text", "value": "${date://CurrentDate/m%2Fd%2FY}"},
