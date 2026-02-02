@@ -171,10 +171,7 @@ class EmbeddedDataMixin:
 
         current_flow['Flow'] = flow_list
 
-        # Update Properties.Count
-        if 'Properties' not in current_flow:
-            current_flow['Properties'] = {}
-        current_flow['Properties']['Count'] = self._count_flow_elements(flow_list)
+        # Don't modify Properties.Count - let Qualtrics handle it
 
         # Update the flow
         update_response = requests.put(
@@ -332,10 +329,7 @@ class EmbeddedDataMixin:
 
         current_flow['Flow'] = flow_list
 
-        # Update Properties.Count
-        if 'Properties' not in current_flow:
-            current_flow['Properties'] = {}
-        current_flow['Properties']['Count'] = self._count_flow_elements(flow_list)
+        # Don't modify Properties.Count - let Qualtrics handle it
 
         # Update the flow
         update_response = requests.put(
@@ -431,10 +425,7 @@ class EmbeddedDataMixin:
 
         current_flow['Flow'] = flow_list
 
-        # Update Properties.Count
-        if 'Properties' not in current_flow:
-            current_flow['Properties'] = {}
-        current_flow['Properties']['Count'] = self._count_flow_elements(flow_list)
+        # Don't modify Properties.Count - let Qualtrics handle it
 
         update_response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/flow',
