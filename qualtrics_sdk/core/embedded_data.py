@@ -104,13 +104,12 @@ class EmbeddedDataMixin:
         current_flow = flow_response.json()['result']
         flow_list = current_flow.get('Flow', [])
 
-        # Build the embedded data field item
+        # Build the embedded data field item (minimal structure)
         field_item = {
             "Description": field_name,
-            "Type": "Custom",
+            "Type": "Recipient",
             "Field": field_name,
-            "VariableType": "String",
-            "DataVisibility": []
+            "VariableType": "String"
         }
 
         if value is not None:
@@ -259,12 +258,12 @@ class EmbeddedDataMixin:
                     f"field_type for '{field_name}' must be one of {valid_types}"
                 )
 
+            # Build the embedded data field item (minimal structure)
             item = {
                 "Description": field_name,
-                "Type": "Custom",
+                "Type": "Recipient",
                 "Field": field_name,
-                "VariableType": "String",
-                "DataVisibility": []
+                "VariableType": "String"
             }
 
             if value is not None:
