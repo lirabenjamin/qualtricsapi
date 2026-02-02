@@ -322,27 +322,46 @@ api.create_constant_sum_question(
 
 ---
 
-#### Question Display Logic 🎯
-**Status:** Planned  
-**Priority:** MEDIUM  
-**Issue:** #TBD
+#### Question Display Logic ✅
+**Status:** COMPLETED (v0.2.0)
+**Priority:** HIGH
+**Issue:** #3
 
 Control when questions appear based on previous answers.
 
-**Planned API:**
+**Implemented API:**
 ```python
-# Add display logic to question
-api.add_display_logic(survey_id, question_id, {
-    "condition": "Q1 == 'Yes' AND Q2 > 5",
-    "conjunction": "AND"
-})
+# Add single condition display logic
+api.add_display_logic(
+    survey_id, question_id="QID2",
+    source_question_id="QID1",
+    operator="Selected",
+    choice_locator="q://QID1/SelectableChoice/1"
+)
 
-# Add skip logic
-api.add_skip_logic(survey_id, question_id, {
-    "if": "Q3 == 'No'",
-    "then": "skip_to_end"
-})
+# Add multiple conditions with AND/OR
+api.add_display_logic_multiple(
+    survey_id, question_id="QID3",
+    conditions=[
+        {"source_question_id": "QID1", "operator": "Selected", "choice_locator": "..."},
+        {"source_question_id": "QID2", "operator": "GreaterThan", "value": 5}
+    ],
+    conjunction="AND"
+)
+
+# Helper methods
+api.skip_if(survey_id, question_id, source_question_id, operator, ...)
+api.show_only_if(survey_id, question_id, source_question_id, operator, ...)
+
+# Embedded data logic
+api.add_embedded_data_logic(survey_id, question_id, "field_name", "EqualTo", "value")
+
+# Get/Delete logic
+logic = api.get_display_logic(survey_id, question_id)
+api.delete_display_logic(survey_id, question_id)
 ```
+
+See [DISPLAY_LOGIC_GUIDE.md](DISPLAY_LOGIC_GUIDE.md) for complete documentation.
 
 ---
 

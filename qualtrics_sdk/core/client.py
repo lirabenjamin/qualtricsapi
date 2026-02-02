@@ -8,6 +8,7 @@ from .surveys import SurveyMixin
 from .questions import QuestionMixin
 from .question_management import QuestionManagementMixin
 from .blocks import BlockMixin
+from .display_logic import DisplayLogicMixin
 
 
 class QualtricsAPI(
@@ -15,7 +16,8 @@ class QualtricsAPI(
     SurveyMixin,
     QuestionMixin,
     QuestionManagementMixin,
-    BlockMixin
+    BlockMixin,
+    DisplayLogicMixin
 ):
     """
     Main Qualtrics API client.
@@ -26,6 +28,7 @@ class QualtricsAPI(
     - QuestionMixin: Question creation for all question types
     - QuestionManagementMixin: Question updates and deletions
     - BlockMixin: Block operations
+    - DisplayLogicMixin: Display logic and conditional display
 
     Usage:
         >>> from qualtrics_sdk import QualtricsAPI

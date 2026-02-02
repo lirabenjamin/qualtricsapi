@@ -15,6 +15,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Distribution management
 - Response data retrieval
 
+## [0.2.0] - 2026-02-02
+
+### Added
+- **Conditional Display / Display Logic Support** (#3)
+  - `add_display_logic()` - Add single condition display logic to questions
+  - `add_display_logic_multiple()` - Add multiple conditions with AND/OR operators
+  - `show_only_if()` - Helper method for clearer display logic
+  - `skip_if()` - Helper method for skip logic (inverse display logic)
+  - `add_embedded_data_logic()` - Display logic based on embedded data fields
+  - `get_display_logic()` - Retrieve display logic for a question
+  - `delete_display_logic()` - Remove display logic from a question
+- New `DisplayLogicMixin` class in modular architecture
+- Supported operators: Selected, NotSelected, EqualTo, NotEqualTo, GreaterThan, LessThan, GreaterOrEqual, LessOrEqual, Contains, DoesNotContain, MatchesRegex, Empty, NotEmpty, Displayed, NotDisplayed
+- Unit tests for display logic (23 tests, 97% coverage)
+- `display_logic_example.py` demonstrating all display logic features
+- `DISPLAY_LOGIC_GUIDE.md` documentation
+
+### Changed
+- Updated `QualtricsAPI` client to include `DisplayLogicMixin`
+- Updated ROADMAP.md with completed display logic feature
+
 ## [0.1.0] - 2026-02-01
 
 ### Added
