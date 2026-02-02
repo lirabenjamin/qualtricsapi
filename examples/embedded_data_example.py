@@ -5,12 +5,16 @@ This example demonstrates how to:
 1. Configure embedded data fields in a survey
 2. Generate personalized survey URLs with pre-populated data
 3. Retrieve and manage embedded data configurations
+4. Set dynamic values from question answers, random numbers, and text
 
 Use cases:
 - Pass user information (name, ID, email) to personalize surveys
 - Track the source of survey respondents (email campaign, social media, etc.)
 - Implement conditional logic based on external data
 - Enable advanced data analysis with segmentation
+- Capture question answers as embedded data for downstream processing
+- Generate random numbers for A/B testing or lottery systems
+- Record timestamps and response metadata
 """
 
 import os
@@ -261,6 +265,102 @@ def example_url_generation():
     return survey_id
 
 
+def example_dynamic_values():
+    """
+    Example 5: Dynamic Embedded Data Values
+
+    Demonstrates embedded data set from:
+    - Question answers (piped text)
+    - Random numbers
+    - Static text values
+    - Calculated values
+
+    These values are set WITHIN the survey flow, not via URL.
+    """
+    print("\n" + "="*60)
+    print("Example 5: Dynamic Embedded Data Values")
+    print("="*60)
+
+    # Create a new survey
+    survey = api.create_survey("Dynamic Embedded Data Demo")
+    survey_id = survey['SurveyID']
+    print(f"\nCreated survey: {survey_id}")
+
+    # First, add some questions that we'll reference
+    q1 = api.create_multiple_choice_question(
+        survey_id,
+        "What is your role?",
+        choices=["Student", "Teacher", "Administrator", "Other"]
+    )
+    print(f"Created role question: {q1.get('QuestionID', 'QID1')}")
+
+    q2 = api.create_text_entry_question(
+        survey_id,
+        "What is your name?",
+        text_type="SL"  # Single line
+    )
+    print(f"Created name question: {q2.get('QuestionID', 'QID2')}")
+
+    # Now set up embedded data with dynamic values
+    # Note: These use Qualtrics piped text syntax
+    result = api.set_embedded_data_fields(
+        survey_id,
+        fields={
+            # Static text value - always the same
+            "survey_version": {"type": "text", "value": "v2.1"},
+
+            # Random number between 1-1000 (for A/B testing, random assignment, etc.)
+            # Uses Qualtrics syntax: ${rand://int/min:max}
+            "random_group": {"type": "text", "value": "${rand://int/1:1000}"},
+
+            # Random number for lottery/prize drawing
+            "lottery_number": {"type": "text", "value": "${rand://int/100000:999999}"},
+
+            # Capture the respondent's role from Q1
+            # Uses piped text: ${q://QID/ChoiceGroup/SelectedChoices}
+            "user_role": {"type": "text", "value": "${q://QID1/ChoiceGroup/SelectedChoices}"},
+
+            # Capture the respondent's name from Q2
+            # Uses piped text: ${q://QID/TEXT}
+            "respondent_name": {"type": "text", "value": "${q://QID2/TEXT}"},
+
+            # Current date/time when survey is taken
+            "completion_date": {"type": "text", "value": "${date://CurrentDate/m%2Fd%2FY}"},
+
+            # Response ID for tracking
+            "response_id": {"type": "text", "value": "${e://Field/ResponseID}"},
+        }
+    )
+    print(f"\nConfigured {result['count']} dynamic embedded data fields")
+
+    # Add a thank you message that uses the embedded data
+    api.create_descriptive_text(
+        survey_id,
+        """
+        <h3>Thank you, ${e://Field/respondent_name}!</h3>
+        <p>Your response has been recorded.</p>
+        <p>Your lottery number is: <strong>${e://Field/lottery_number}</strong></p>
+        <p>You were assigned to group: ${e://Field/random_group}</p>
+        """
+    )
+
+    # Retrieve and display the embedded data configuration
+    fields = api.get_embedded_data(survey_id)
+    print(f"\nEmbedded data fields configured:")
+    for field in fields:
+        field_name = field.get('Field', 'unknown')
+        value = field.get('Value', '(captured at runtime)')
+        print(f"  - {field_name}: {value}")
+
+    # Generate the survey URL
+    url = api.get_survey_url(survey_id)
+    print(f"\nSurvey URL: {url}")
+    print("\nNote: Dynamic values (random numbers, question answers) are")
+    print("populated when the respondent takes the survey, not in the URL.")
+
+    return survey_id
+
+
 def cleanup_surveys(survey_ids):
     """Delete all created surveys"""
     print("\n" + "="*60)
@@ -287,6 +387,7 @@ if __name__ == "__main__":
         created_surveys.append(example_multiple_fields())
         created_surveys.append(example_retrieve_and_manage())
         created_surveys.append(example_url_generation())
+        created_surveys.append(example_dynamic_values())
 
         print("\n" + "="*60)
         print("All examples completed successfully!")
