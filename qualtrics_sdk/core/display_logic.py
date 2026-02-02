@@ -72,12 +72,13 @@ class DisplayLogicMixin:
                 condition['Operator'] = operator
             elif value is not None:
                 # For numeric/text comparisons (slider, text entry, etc.)
-                # Use ChoiceTextEntryValue for slider questions to reference the numeric value
-                condition['LeftOperand'] = f'q://{question_id}/ChoiceTextEntryValue/1'
+                # For sliders, we need to reference the choice by number, not by a complex path
+                # The LeftOperand references the answer value, ChoiceLocator identifies which slider
+                condition['LeftOperand'] = f'q://{question_id}/ChoiceNumericEntryValue/1'
                 condition['Operator'] = operator
                 condition['RightOperand'] = str(value)
                 condition['QuestionIDFromLocator'] = question_id
-                condition['ChoiceLocator'] = f'q://{question_id}/ChoiceTextEntryValue/1'
+                condition['ChoiceLocator'] = f'q://{question_id}/ChoiceNumericEntryValue/1'
             else:
                 # Fallback for other operators without specific choice or value
                 condition['LeftOperand'] = f'q://{question_id}/SelectableChoice'
