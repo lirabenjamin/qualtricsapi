@@ -6,10 +6,37 @@ Handles embedded data field configuration and URL generation
 import requests
 from typing import Dict, List, Any, Optional
 from urllib.parse import urlencode
+import re
 
 
 class EmbeddedDataMixin:
     """Mixin providing embedded data operations for Qualtrics surveys"""
+
+    def _get_next_flow_id(self, flow_list: List[Dict]) -> str:
+        """Generate a unique FlowID by finding the max existing ID and incrementing."""
+        max_id = 0
+        for element in flow_list:
+            flow_id = element.get('FlowID', '')
+            match = re.match(r'FL_(\d+)', flow_id)
+            if match:
+                max_id = max(max_id, int(match.group(1)))
+            # Also check nested flows
+            if 'Flow' in element and isinstance(element['Flow'], list):
+                for nested in element['Flow']:
+                    nested_id = nested.get('FlowID', '')
+                    match = re.match(r'FL_(\d+)', nested_id)
+                    if match:
+                        max_id = max(max_id, int(match.group(1)))
+        return f"FL_{max_id + 1}"
+
+    def _count_flow_elements(self, flow_list: List[Dict]) -> int:
+        """Count total flow elements including nested ones."""
+        count = 0
+        for element in flow_list:
+            count += 1
+            if 'Flow' in element and isinstance(element['Flow'], list):
+                count += self._count_flow_elements(element['Flow'])
+        return count
 
     def set_embedded_data(
         self,
@@ -22,14 +49,11 @@ class EmbeddedDataMixin:
         """
         Configure an individual embedded data field in a survey.
 
-        Embedded data fields allow you to pass respondent details, capture
-        external data, and control survey flow.
-
         Args:
             survey_id: The survey ID
             field_name: Name of the embedded data field
             field_type: Type of field - "text", "number", or "date" (default: "text")
-            value: Optional default value for the field
+            value: Optional default value for the field (can use Qualtrics piped text)
             position: Where to place in flow - "start" or "end" (default: "start")
                       Use "start" for data passed via URL or static values.
                       Use "end" for capturing question answers with piped text.
@@ -48,7 +72,7 @@ class EmbeddedDataMixin:
         if position not in ["start", "end"]:
             raise ValueError("position must be 'start' or 'end'")
 
-        # Get current survey flow to add embedded data
+        # Get current survey flow
         flow_response = requests.get(
             f'{self.base_url}/survey-definitions/{survey_id}/flow',
             headers=self.headers
@@ -58,77 +82,80 @@ class EmbeddedDataMixin:
             raise Exception(f"Failed to get survey flow: {flow_response.text}")
 
         current_flow = flow_response.json()['result']
+        flow_list = current_flow.get('Flow', [])
 
-        # Map user-friendly types to Qualtrics API values
-        # Type must be: "Recipient", "Custom", or "EmbeddedData"
-        # VariableType must be: "Nominal", "MultiValueNominal", "Ordinal", "Scale", "String", "Date", "FilterOnly"
-        type_mapping = {
-            "text": ("Recipient", "String"),
-            "number": ("Custom", "Scale"),
-            "date": ("Custom", "Date")
-        }
-        api_type, variable_type = type_mapping[field_type]
-
-        # Build embedded data element
-        embedded_data_element = {
-            "Type": "EmbeddedData",
-            "FlowID": f"FL_{len(current_flow.get('Flow', []))+1}",
-            "EmbeddedData": [
-                {
-                    "Description": field_name,
-                    "Type": api_type,
-                    "Field": field_name,
-                    "VariableType": variable_type,
-                    "DataVisibility": [],
-                    "AnalyzeText": False
-                }
-            ]
+        # Build the embedded data field item
+        field_item = {
+            "Description": field_name,
+            "Type": "Custom",
+            "Field": field_name,
+            "VariableType": "String",
+            "DataVisibility": []
         }
 
         if value is not None:
-            embedded_data_element["EmbeddedData"][0]["Value"] = value
+            field_item["Value"] = value
 
-        # Check if embedded data already exists in flow
-        flow_list = current_flow.get('Flow', [])
-        embedded_data_exists = False
-
-        for i, element in enumerate(flow_list):
-            if element.get('Type') == 'EmbeddedData':
-                # Add to existing embedded data element
-                existing_fields = element.get('EmbeddedData', [])
-                # Check if field already exists
-                field_exists = any(
-                    f.get('Field') == field_name for f in existing_fields
-                )
-                if not field_exists:
-                    existing_fields.append(embedded_data_element["EmbeddedData"][0])
-                    element['EmbeddedData'] = existing_fields
-                else:
-                    # Update existing field
+        # Find the right position to insert
+        if position == "start":
+            insert_idx = 0
+            # Check if first element is already EmbeddedData
+            if flow_list and flow_list[0].get('Type') == 'EmbeddedData':
+                # Add to existing first EmbeddedData block
+                existing_fields = flow_list[0].get('EmbeddedData', [])
+                field_exists = any(f.get('Field') == field_name for f in existing_fields)
+                if field_exists:
                     for f in existing_fields:
                         if f.get('Field') == field_name:
-                            f.update(embedded_data_element["EmbeddedData"][0])
+                            f.update(field_item)
                             break
-                embedded_data_exists = True
-                break
-
-        if not embedded_data_exists:
-            # Insert based on position parameter
-            if position == "start":
-                flow_list.insert(0, embedded_data_element)
-            else:  # position == "end"
-                # Find the EndSurvey element if it exists and insert before it
-                end_survey_idx = None
-                for i, element in enumerate(flow_list):
-                    if element.get('Type') == 'EndSurvey':
-                        end_survey_idx = i
-                        break
-                if end_survey_idx is not None:
-                    flow_list.insert(end_survey_idx, embedded_data_element)
                 else:
-                    flow_list.append(embedded_data_element)
+                    existing_fields.append(field_item)
+                flow_list[0]['EmbeddedData'] = existing_fields
+            else:
+                # Create new EmbeddedData block at start
+                new_element = {
+                    "Type": "EmbeddedData",
+                    "FlowID": self._get_next_flow_id(flow_list),
+                    "EmbeddedData": [field_item]
+                }
+                flow_list.insert(0, new_element)
+        else:  # position == "end"
+            # Find or create EmbeddedData at the end (before EndSurvey if present)
+            end_idx = len(flow_list)
+            for i, element in enumerate(flow_list):
+                if element.get('Type') == 'EndSurvey':
+                    end_idx = i
+                    break
+
+            # Check if there's already an EmbeddedData right before end position
+            if end_idx > 0 and flow_list[end_idx - 1].get('Type') == 'EmbeddedData':
+                # Add to existing end EmbeddedData block
+                existing_fields = flow_list[end_idx - 1].get('EmbeddedData', [])
+                field_exists = any(f.get('Field') == field_name for f in existing_fields)
+                if field_exists:
+                    for f in existing_fields:
+                        if f.get('Field') == field_name:
+                            f.update(field_item)
+                            break
+                else:
+                    existing_fields.append(field_item)
+                flow_list[end_idx - 1]['EmbeddedData'] = existing_fields
+            else:
+                # Create new EmbeddedData block at end
+                new_element = {
+                    "Type": "EmbeddedData",
+                    "FlowID": self._get_next_flow_id(flow_list),
+                    "EmbeddedData": [field_item]
+                }
+                flow_list.insert(end_idx, new_element)
 
         current_flow['Flow'] = flow_list
+
+        # Update Properties.Count
+        if 'Properties' not in current_flow:
+            current_flow['Properties'] = {}
+        current_flow['Properties']['Count'] = self._count_flow_elements(flow_list)
 
         # Update the flow
         update_response = requests.put(
@@ -162,9 +189,9 @@ class EmbeddedDataMixin:
             fields: Dictionary mapping field names to their configuration.
                     Each field config can contain:
                     - "type": "text", "number", or "date" (default: "text")
-                    - "value": optional default value
+                    - "value": optional default value (can use Qualtrics piped text)
             position: Where to place in flow - "start" or "end" (default: "start")
-                      Use "start" for data passed via URL or static values.
+                      Use "start" for data passed via URL, static values, random numbers.
                       Use "end" for capturing question answers with piped text.
 
         Returns:
@@ -174,14 +201,20 @@ class EmbeddedDataMixin:
             Exception: If the API call fails
 
         Example:
+            >>> # Static values and random numbers at start
             >>> api.set_embedded_data_fields(survey_id, {
-            ...     "user_id": {"type": "text"},
-            ...     "score": {"type": "number", "value": "0"},
-            ...     "start_date": {"type": "date"}
-            ... })
+            ...     "random_id": {"type": "text", "value": "${rand://int/1:1000}"},
+            ...     "version": {"type": "text", "value": "v1.0"}
+            ... }, position="start")
+            >>>
+            >>> # Capture question answers at end
+            >>> api.set_embedded_data_fields(survey_id, {
+            ...     "user_answer": {"type": "text", "value": "${q://QID1/ChoiceGroup/SelectedChoices}"}
+            ... }, position="end")
         """
         if position not in ["start", "end"]:
             raise ValueError("position must be 'start' or 'end'")
+
         # Get current survey flow
         flow_response = requests.get(
             f'{self.base_url}/survey-definitions/{survey_id}/flow',
@@ -192,8 +225,9 @@ class EmbeddedDataMixin:
             raise Exception(f"Failed to get survey flow: {flow_response.text}")
 
         current_flow = flow_response.json()['result']
+        flow_list = current_flow.get('Flow', [])
 
-        # Build embedded data elements for all fields
+        # Build embedded data items for all fields
         embedded_data_items = []
         for field_name, config in fields.items():
             field_type = config.get("type", "text")
@@ -205,21 +239,12 @@ class EmbeddedDataMixin:
                     f"field_type for '{field_name}' must be one of {valid_types}"
                 )
 
-            # Map user-friendly types to Qualtrics API values
-            type_mapping = {
-                "text": ("Recipient", "String"),
-                "number": ("Custom", "Scale"),
-                "date": ("Custom", "Date")
-            }
-            api_type, variable_type = type_mapping[field_type]
-
             item = {
                 "Description": field_name,
-                "Type": api_type,
+                "Type": "Custom",
                 "Field": field_name,
-                "VariableType": variable_type,
-                "DataVisibility": [],
-                "AnalyzeText": False
+                "VariableType": "String",
+                "DataVisibility": []
             }
 
             if value is not None:
@@ -227,53 +252,71 @@ class EmbeddedDataMixin:
 
             embedded_data_items.append(item)
 
-        # Check if embedded data already exists in flow
-        flow_list = current_flow.get('Flow', [])
-        embedded_data_exists = False
-
-        for element in flow_list:
-            if element.get('Type') == 'EmbeddedData':
-                existing_fields = element.get('EmbeddedData', [])
-                existing_field_names = {f.get('Field') for f in existing_fields}
+        # Insert based on position
+        if position == "start":
+            # Check if first element is already EmbeddedData
+            if flow_list and flow_list[0].get('Type') == 'EmbeddedData':
+                existing_fields = flow_list[0].get('EmbeddedData', [])
+                existing_names = {f.get('Field') for f in existing_fields}
 
                 for item in embedded_data_items:
-                    if item['Field'] in existing_field_names:
-                        # Update existing field
+                    if item['Field'] in existing_names:
+                        # Update existing
                         for f in existing_fields:
                             if f.get('Field') == item['Field']:
                                 f.update(item)
                                 break
                     else:
-                        # Add new field
                         existing_fields.append(item)
 
-                element['EmbeddedData'] = existing_fields
-                embedded_data_exists = True
-                break
+                flow_list[0]['EmbeddedData'] = existing_fields
+            else:
+                # Create new EmbeddedData block at start
+                new_element = {
+                    "Type": "EmbeddedData",
+                    "FlowID": self._get_next_flow_id(flow_list),
+                    "EmbeddedData": embedded_data_items
+                }
+                flow_list.insert(0, new_element)
+        else:  # position == "end"
+            # Find end position (before EndSurvey if present)
+            end_idx = len(flow_list)
+            for i, element in enumerate(flow_list):
+                if element.get('Type') == 'EndSurvey':
+                    end_idx = i
+                    break
 
-        if not embedded_data_exists:
-            # Create new embedded data element
-            embedded_data_element = {
-                "Type": "EmbeddedData",
-                "FlowID": f"FL_{len(flow_list)+1}",
-                "EmbeddedData": embedded_data_items
-            }
-            # Insert based on position parameter
-            if position == "start":
-                flow_list.insert(0, embedded_data_element)
-            else:  # position == "end"
-                # Find the EndSurvey element if it exists and insert before it
-                end_survey_idx = None
-                for i, element in enumerate(flow_list):
-                    if element.get('Type') == 'EndSurvey':
-                        end_survey_idx = i
-                        break
-                if end_survey_idx is not None:
-                    flow_list.insert(end_survey_idx, embedded_data_element)
-                else:
-                    flow_list.append(embedded_data_element)
+            # Check if there's already an EmbeddedData right before end
+            # But NOT at position 0 (that's the start block)
+            if end_idx > 1 and flow_list[end_idx - 1].get('Type') == 'EmbeddedData':
+                existing_fields = flow_list[end_idx - 1].get('EmbeddedData', [])
+                existing_names = {f.get('Field') for f in existing_fields}
+
+                for item in embedded_data_items:
+                    if item['Field'] in existing_names:
+                        for f in existing_fields:
+                            if f.get('Field') == item['Field']:
+                                f.update(item)
+                                break
+                    else:
+                        existing_fields.append(item)
+
+                flow_list[end_idx - 1]['EmbeddedData'] = existing_fields
+            else:
+                # Create new EmbeddedData block at end
+                new_element = {
+                    "Type": "EmbeddedData",
+                    "FlowID": self._get_next_flow_id(flow_list),
+                    "EmbeddedData": embedded_data_items
+                }
+                flow_list.insert(end_idx, new_element)
 
         current_flow['Flow'] = flow_list
+
+        # Update Properties.Count
+        if 'Properties' not in current_flow:
+            current_flow['Properties'] = {}
+        current_flow['Properties']['Count'] = self._count_flow_elements(flow_list)
 
         # Update the flow
         update_response = requests.put(
@@ -362,12 +405,17 @@ class EmbeddedDataMixin:
                 if len(new_fields) != len(existing_fields):
                     field_found = True
                     element['EmbeddedData'] = new_fields
-                break
+                    break
 
         if not field_found:
             raise Exception(f"Embedded data field '{field_name}' not found")
 
         current_flow['Flow'] = flow_list
+
+        # Update Properties.Count
+        if 'Properties' not in current_flow:
+            current_flow['Properties'] = {}
+        current_flow['Properties']['Count'] = self._count_flow_elements(flow_list)
 
         update_response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/flow',
