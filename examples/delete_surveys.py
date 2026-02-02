@@ -36,11 +36,14 @@ test_patterns = [
     "Display Logic Demo",
     "Test Survey",
     "Example Survey",
+    "Display Logic Debug Test",
+    "Display Logic Demo"
     # Add more patterns as needed
 ]
 
 test_surveys = []
 for survey in surveys:
+    print(survey['name'])
     for pattern in test_patterns:
         if pattern.lower() in survey['name'].lower():
             test_surveys.append(survey)

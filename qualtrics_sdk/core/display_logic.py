@@ -65,15 +65,23 @@ class DisplayLogicMixin:
             condition['QuestionIsInLoop'] = 'no'
 
             if choice_locator:
+                # For multiple choice questions with Selected/NotSelected operators
                 condition['ChoiceLocator'] = choice_locator
                 condition['QuestionIDFromLocator'] = question_id
                 condition['LeftOperand'] = choice_locator
                 condition['Operator'] = operator
+            elif value is not None:
+                # For numeric/text comparisons (slider, text entry, etc.)
+                # Use ChoiceTextEntryValue for slider questions to reference the numeric value
+                condition['LeftOperand'] = f'q://{question_id}/ChoiceTextEntryValue/1'
+                condition['Operator'] = operator
+                condition['RightOperand'] = str(value)
+                condition['QuestionIDFromLocator'] = question_id
+                condition['ChoiceLocator'] = f'q://{question_id}/ChoiceTextEntryValue/1'
             else:
+                # Fallback for other operators without specific choice or value
                 condition['LeftOperand'] = f'q://{question_id}/SelectableChoice'
                 condition['Operator'] = operator
-                if value is not None:
-                    condition['RightOperand'] = str(value)
 
         elif logic_type == 'EmbeddedField':
             condition['LeftOperand'] = f'ed://{question_id}'
