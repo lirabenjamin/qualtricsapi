@@ -169,15 +169,19 @@ class EmbeddedDataMixin:
                 }
                 flow_list.insert(end_idx, new_element)
 
-        current_flow['Flow'] = flow_list
-
-        # Don't modify Properties.Count - let Qualtrics handle it
+        # Build the update payload with only required fields
+        update_payload = {
+            "FlowID": current_flow.get("FlowID", "FL_1"),
+            "Type": current_flow.get("Type", "Root"),
+            "Flow": flow_list,
+            "Properties": current_flow.get("Properties", {"Count": len(flow_list)})
+        }
 
         # Update the flow
         update_response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/flow',
             headers=self.headers,
-            json=current_flow
+            json=update_payload
         )
 
         if update_response.status_code == 200:
@@ -327,15 +331,19 @@ class EmbeddedDataMixin:
                 }
                 flow_list.insert(end_idx, new_element)
 
-        current_flow['Flow'] = flow_list
-
-        # Don't modify Properties.Count - let Qualtrics handle it
+        # Build the update payload with only required fields
+        update_payload = {
+            "FlowID": current_flow.get("FlowID", "FL_1"),
+            "Type": current_flow.get("Type", "Root"),
+            "Flow": flow_list,
+            "Properties": current_flow.get("Properties", {"Count": len(flow_list)})
+        }
 
         # Update the flow
         update_response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/flow',
             headers=self.headers,
-            json=current_flow
+            json=update_payload
         )
 
         if update_response.status_code == 200:
@@ -423,14 +431,18 @@ class EmbeddedDataMixin:
         if not field_found:
             raise Exception(f"Embedded data field '{field_name}' not found")
 
-        current_flow['Flow'] = flow_list
-
-        # Don't modify Properties.Count - let Qualtrics handle it
+        # Build the update payload with only required fields
+        update_payload = {
+            "FlowID": current_flow.get("FlowID", "FL_1"),
+            "Type": current_flow.get("Type", "Root"),
+            "Flow": flow_list,
+            "Properties": current_flow.get("Properties", {"Count": len(flow_list)})
+        }
 
         update_response = requests.put(
             f'{self.base_url}/survey-definitions/{survey_id}/flow',
             headers=self.headers,
-            json=current_flow
+            json=update_payload
         )
 
         if update_response.status_code == 200:
