@@ -27,6 +27,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Distribution management
 - Response data retrieval
 
+## [0.2.0] - 2026-02-02
+
+### Added
+- **Conditional Display / Display Logic Support** (#3)
+  - `add_display_logic()` - Add single condition display logic to questions
+  - `add_display_logic_multiple()` - Add multiple conditions with AND/OR operators
+  - `show_only_if()` - Helper method for clearer display logic
+  - `skip_if()` - Helper method for skip logic (inverse display logic)
+  - `add_embedded_data_logic()` - Display logic based on embedded data fields
+  - `get_display_logic()` - Retrieve display logic for a question
+  - `delete_display_logic()` - Remove display logic from a question
+  - `add_page_break()` - Helper method to add page breaks before conditional questions
+- New `DisplayLogicMixin` class in modular architecture
+- Supported operators: Selected, NotSelected, EqualTo, NotEqualTo, GreaterThan, LessThan, GreaterOrEqual, LessOrEqual, Contains, DoesNotContain, MatchesRegex, Empty, NotEmpty, Displayed, NotDisplayed
+- Example scripts:
+  - `display_logic_example.py` - Comprehensive display logic demonstrations
+  - `debug_display_logic.py` - Diagnostic tool for testing display logic
+  - `compare_logic.py` - Tool to compare display logic structures
+  - `delete_surveys.py` - Batch delete test surveys
+
+### Fixed
+- Display logic now works correctly in live surveys (not just in API responses)
+- Added required `DataExportTag` field when updating questions with display logic
+- Added `QuestionIDFromLocator` and `LeftOperand` fields to display logic conditions to match Qualtrics API expectations
+- Added `ChoiceOrder` to multiple choice questions (was missing, now properly included)
+- Fixed `Conjunction` spelling and capitalization (now "And"/"Or" instead of "AND"/"OR")
+- Removed invalid `Description` field from display logic structure
+- Fixed slider questions to only show min/max labels by setting `GridLines: 0`
+- Updated display logic example to use separate blocks for proper page breaks
+
+### Changed
+- Updated `QualtricsAPI` client to include `DisplayLogicMixin`
+- Multiple choice questions now include `ChoiceOrder` field
+- Display logic example now creates questions in separate blocks for automatic page breaks
+- Slider questions now have cleaner formatting with only min/max labels visible
+
 ## [0.1.0] - 2026-02-01
 
 ### Added

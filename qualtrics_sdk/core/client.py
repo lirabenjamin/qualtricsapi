@@ -8,6 +8,7 @@ from .surveys import SurveyMixin
 from .questions import QuestionMixin
 from .question_management import QuestionManagementMixin
 from .blocks import BlockMixin
+from .display_logic import DisplayLogicMixin
 from .embedded_data import EmbeddedDataMixin
 
 
@@ -17,6 +18,7 @@ class QualtricsAPI(
     QuestionMixin,
     QuestionManagementMixin,
     BlockMixin,
+    DisplayLogicMixin,
     EmbeddedDataMixin
 ):
     """
@@ -28,6 +30,7 @@ class QualtricsAPI(
     - QuestionMixin: Question creation for all question types
     - QuestionManagementMixin: Question updates and deletions
     - BlockMixin: Block operations
+    - DisplayLogicMixin: Display logic and conditional display
     - EmbeddedDataMixin: Embedded data field configuration and URL generation
 
     Usage:
