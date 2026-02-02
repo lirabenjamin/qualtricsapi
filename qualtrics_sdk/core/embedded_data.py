@@ -52,6 +52,16 @@ class EmbeddedDataMixin:
 
         current_flow = flow_response.json()['result']
 
+        # Map user-friendly types to Qualtrics API values
+        # Type must be: "Recipient", "Custom", or "EmbeddedData"
+        # VariableType must be: "Nominal", "MultiValueNominal", "Ordinal", "Scale", "String", "Date", "FilterOnly"
+        type_mapping = {
+            "text": ("Recipient", "String"),
+            "number": ("Custom", "Scale"),
+            "date": ("Custom", "Date")
+        }
+        api_type, variable_type = type_mapping[field_type]
+
         # Build embedded data element
         embedded_data_element = {
             "Type": "EmbeddedData",
@@ -59,11 +69,9 @@ class EmbeddedDataMixin:
             "EmbeddedData": [
                 {
                     "Description": field_name,
-                    "Type": field_type.capitalize() if field_type != "text" else "Recipient",
+                    "Type": api_type,
                     "Field": field_name,
-                    "VariableType": "String" if field_type == "text" else (
-                        "Number" if field_type == "number" else "Date"
-                    ),
+                    "VariableType": variable_type,
                     "DataVisibility": [],
                     "AnalyzeText": False
                 }
@@ -171,13 +179,19 @@ class EmbeddedDataMixin:
                     f"field_type for '{field_name}' must be one of {valid_types}"
                 )
 
+            # Map user-friendly types to Qualtrics API values
+            type_mapping = {
+                "text": ("Recipient", "String"),
+                "number": ("Custom", "Scale"),
+                "date": ("Custom", "Date")
+            }
+            api_type, variable_type = type_mapping[field_type]
+
             item = {
                 "Description": field_name,
-                "Type": field_type.capitalize() if field_type != "text" else "Recipient",
+                "Type": api_type,
                 "Field": field_name,
-                "VariableType": "String" if field_type == "text" else (
-                    "Number" if field_type == "number" else "Date"
-                ),
+                "VariableType": variable_type,
                 "DataVisibility": [],
                 "AnalyzeText": False
             }
