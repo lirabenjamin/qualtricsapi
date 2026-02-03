@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Custom JavaScript for questions** (#8)
+  - `add_question_javascript()` - Add custom JavaScript to any question with optional append mode
+  - `get_question_javascript()` - Retrieve JavaScript code from a question
+  - `remove_question_javascript()` - Remove all JavaScript from a question
+  - `add_auto_advance()` - Auto-advance questions after a delay (for timed displays)
+  - `add_timer_display()` - Add visible countdown timer with optional auto-advance
+  - `add_input_validation()` - Custom input validation using regex patterns
+  - `add_iframe()` - Embed iframes (videos, external content) in questions
+  - `add_next_button_modification()` - Modify next button text, visibility, timing, and styling
+  - `add_choice_style()` - Style response choices with custom colors and effects
+- New `JavaScriptMixin` module following the existing mixin pattern
+- Example file: `examples/javascript_example.py` with 9 comprehensive examples
+
 - **Embedded data support** (#1)
   - `set_embedded_data()` - Configure individual embedded data fields with type specifications (text, number, date)
   - `set_embedded_data_fields()` - Configure multiple fields simultaneously via dictionary, with `position` parameter for flow placement ("start" or "end")
@@ -23,7 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Planned
 - Survey flow management
 - Loop and merge functionality
-- Custom JavaScript for questions
 - Distribution management
 - Response data retrieval
 

@@ -108,14 +108,14 @@ api.update_survey_flow(survey_id, flow_definition)
 
 ### Priority: HIGH - Advanced Question Features
 
-#### Custom JavaScript for Questions 🎯
-**Status:** Planned  
-**Priority:** MEDIUM  
-**Issue:** #TBD
+#### Custom JavaScript for Questions ✅
+**Status:** COMPLETED (v0.3.0)
+**Priority:** MEDIUM
+**Issue:** #8
 
 Add custom JavaScript to questions for advanced interactivity.
 
-**Planned API:**
+**Implemented API:**
 ```python
 # Add JavaScript to question
 api.add_question_javascript(
@@ -131,14 +131,24 @@ api.add_question_javascript(
 
 # Common presets
 api.add_auto_advance(survey_id, question_id, delay_ms=3000)
+api.add_timer_display(survey_id, question_id, duration_seconds=30)
 api.add_input_validation(survey_id, question_id, regex=r"^\d{5}$")
+api.add_iframe(survey_id, question_id, iframe_url="https://...")
+api.add_next_button_modification(survey_id, question_id, button_text="Continue")
+api.add_choice_style(survey_id, question_id, background_color="#f5f5f5")
+
+# Management
+js = api.get_question_javascript(survey_id, question_id)
+api.remove_question_javascript(survey_id, question_id)
 ```
 
 **Use Cases:**
-- Custom validation
-- Auto-advance questions
-- Hide/show elements
-- Custom interactions
+- Custom validation with regex patterns
+- Auto-advance timed questions
+- Countdown timer displays
+- Embed iframes (videos, external content)
+- Modify next button behavior/appearance
+- Style response choices
 
 ---
 

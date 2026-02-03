@@ -10,6 +10,7 @@ from .question_management import QuestionManagementMixin
 from .blocks import BlockMixin
 from .display_logic import DisplayLogicMixin
 from .embedded_data import EmbeddedDataMixin
+from .javascript import JavaScriptMixin
 
 
 class QualtricsAPI(
@@ -19,7 +20,8 @@ class QualtricsAPI(
     QuestionManagementMixin,
     BlockMixin,
     DisplayLogicMixin,
-    EmbeddedDataMixin
+    EmbeddedDataMixin,
+    JavaScriptMixin
 ):
     """
     Main Qualtrics API client.
@@ -32,6 +34,7 @@ class QualtricsAPI(
     - BlockMixin: Block operations
     - DisplayLogicMixin: Display logic and conditional display
     - EmbeddedDataMixin: Embedded data field configuration and URL generation
+    - JavaScriptMixin: Custom JavaScript for questions (timers, validation, styling)
 
     Usage:
         >>> from qualtrics_sdk import QualtricsAPI

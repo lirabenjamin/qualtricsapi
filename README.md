@@ -22,6 +22,13 @@ A comprehensive Python wrapper for the Qualtrics REST API v3. This module provid
   - Support for all comparison operators (Selected, EqualTo, GreaterThan, Contains, etc.)
   - Helper methods for common patterns (show_only_if, skip_if)
 - **Embedded Data**: Configure embedded data fields and generate personalized survey URLs
+- **Custom JavaScript**: Add custom JavaScript to questions for advanced interactivity
+  - Auto-advance questions with timing delays
+  - Countdown timers with visual display
+  - Custom input validation with regex patterns
+  - Embed iframes (videos, external content)
+  - Modify next button appearance and behavior
+  - Style response choices with custom colors
 - **Professional Code Organization**: Modular structure with mixin pattern for easy maintenance and extension
 
 ## Code Organization
@@ -37,6 +44,7 @@ qualtrics_sdk/core/
 ├── blocks.py               - Block operations
 ├── display_logic.py        - Display logic / conditional questions
 ├── embedded_data.py        - Embedded data operations
+├── javascript.py           - Custom JavaScript for questions
 └── client.py               - Combines all functionality
 ```
 
@@ -427,6 +435,120 @@ fields = api.get_embedded_data(survey_id)
 api.delete_embedded_data(survey_id, "field_to_remove")
 ```
 
+### Custom JavaScript
+
+Add custom JavaScript to questions for advanced interactivity, timers, validation, and more.
+
+#### Add Custom JavaScript to a Question
+```python
+# Add custom JavaScript to a question
+api.add_question_javascript(
+    survey_id,
+    question_id,
+    '''
+    Qualtrics.SurveyEngine.addOnload(function() {
+        console.log('Question loaded!');
+    });
+
+    Qualtrics.SurveyEngine.addOnReady(function() {
+        // Manipulate the DOM
+        var container = this.getQuestionContainer();
+        container.style.backgroundColor = '#f5f5f5';
+    });
+    '''
+)
+```
+
+#### Auto-Advance Questions
+```python
+# Auto-advance after 5 seconds (useful for timed displays)
+api.add_auto_advance(survey_id, question_id, delay_ms=5000)
+```
+
+#### Countdown Timer Display
+```python
+# Add visible countdown timer that auto-advances
+api.add_timer_display(
+    survey_id, question_id,
+    duration_seconds=30,
+    auto_advance=True,
+    timer_position='top'  # or 'bottom'
+)
+```
+
+#### Custom Input Validation
+```python
+# Validate ZIP code format
+api.add_input_validation(
+    survey_id, question_id,
+    regex=r"^\d{5}$",
+    error_message="Please enter a valid 5-digit ZIP code"
+)
+
+# Validate email format
+api.add_input_validation(
+    survey_id, question_id,
+    regex=r"^[^\s@]+@[^\s@]+\.[^\s@]+$",
+    error_message="Please enter a valid email address"
+)
+```
+
+#### Embed iframes (Videos, External Content)
+```python
+# Embed a YouTube video
+api.add_iframe(
+    survey_id, question_id,
+    iframe_url="https://www.youtube.com/embed/VIDEO_ID",
+    width="560px",
+    height="315px",
+    position="top"  # or 'bottom'
+)
+```
+
+#### Modify Next Button
+```python
+# Change button text
+api.add_next_button_modification(
+    survey_id, question_id,
+    button_text="Continue to Next Section"
+)
+
+# Hide button for 5 seconds then show
+api.add_next_button_modification(
+    survey_id, question_id,
+    hide_button=True,
+    show_after_ms=5000
+)
+
+# Style the button
+api.add_next_button_modification(
+    survey_id, question_id,
+    button_text="Submit",
+    custom_style="background-color: #4CAF50; color: white; font-weight: bold;"
+)
+```
+
+#### Style Response Choices
+```python
+# Add custom styling to multiple choice options
+api.add_choice_style(
+    survey_id, question_id,
+    background_color="#f5f5f5",
+    border_radius="8px",
+    hover_color="#e0e0e0",
+    selected_color="#bbdefb"
+)
+```
+
+#### Get and Remove JavaScript
+```python
+# Get JavaScript from a question
+js = api.get_question_javascript(survey_id, question_id)
+
+# Remove all JavaScript from a question
+api.remove_question_javascript(survey_id, question_id)
+```
+
 ## Running the Example
 
 The `main.py` file contains a comprehensive example that creates a survey with all question types:
@@ -484,6 +606,17 @@ api = QualtricsAPI(api_token: str, data_center: str)
 - `delete_embedded_data(survey_id, field_name)` - Delete a field
 - `get_survey_url_with_embedded_data(survey_id, embedded_data)` - Generate personalized URL
 - `get_survey_flow(survey_id)` - Get the survey flow structure
+
+#### JavaScript Operations
+- `add_question_javascript(survey_id, question_id, javascript_code, append)` - Add custom JavaScript
+- `get_question_javascript(survey_id, question_id)` - Get JavaScript from a question
+- `remove_question_javascript(survey_id, question_id)` - Remove all JavaScript
+- `add_auto_advance(survey_id, question_id, delay_ms)` - Auto-advance after delay
+- `add_timer_display(survey_id, question_id, duration_seconds, auto_advance, timer_position)` - Add countdown timer
+- `add_input_validation(survey_id, question_id, regex, error_message)` - Add regex validation
+- `add_iframe(survey_id, question_id, iframe_url, width, height, position)` - Embed iframe
+- `add_next_button_modification(survey_id, question_id, button_text, hide_button, show_after_ms, custom_style)` - Modify next button
+- `add_choice_style(survey_id, question_id, background_color, border_radius, hover_color, selected_color)` - Style choices
 
 **Note:** All question creation methods accept an optional `block_id` parameter to specify which block to add the question to. See [docs/BLOCKS_GUIDE.md](docs/BLOCKS_GUIDE.md) for details.
 
