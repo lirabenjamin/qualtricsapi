@@ -11,6 +11,47 @@ from typing import Dict, List, Any, Optional
 class QuestionMixin:
     """Mixin providing question creation methods for all question types"""
 
+    def _send_question(
+        self,
+        survey_id: str,
+        question_data: Dict[str, Any],
+        question_id: Optional[str] = None,
+        block_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Create a new question or replace an existing one in place.
+
+        When question_id is provided, PUTs to replace the question at that QID,
+        preserving its position in the block. When absent, POSTs to create a new
+        question (appended to block_id or the default block).
+
+        Args:
+            survey_id: The survey ID
+            question_data: Full question payload
+            question_id: If provided, replace this question in place (PUT)
+            block_id: For new questions only — which block to append to
+
+        Returns:
+            Dictionary with question details including QuestionID
+        """
+        if question_id:
+            url = f"{self.base_url}/survey-definitions/{survey_id}/questions/{question_id}"
+            response = requests.put(url, headers=self.headers, json=question_data)
+        else:
+            url = f"{self.base_url}/survey-definitions/{survey_id}/questions"
+            params = {"blockId": block_id} if block_id else None
+            response = requests.post(url, headers=self.headers, json=question_data, params=params)
+
+        if response.status_code == 200:
+            body = response.json()
+            if question_id:
+                # PUT returns no result key — just confirm success
+                return {"QuestionID": question_id}
+            return body["result"]
+        else:
+            action = "update" if question_id else "create"
+            raise Exception(f"Failed to {action} question: {response.text}")
+
     def _generate_data_export_tag(self, question_text: str) -> str:
         """
         Generate a data export tag from question text.
@@ -28,10 +69,11 @@ class QuestionMixin:
         choices: List[str],
         selector: str = "SAVR",
         allow_multiple: bool = False,
-        block_id: Optional[str] = None
+        block_id: Optional[str] = None,
+        question_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Create a multiple choice question (radio buttons or checkboxes)
+        Create a multiple choice question, or replace an existing question in place.
 
         Args:
             survey_id: The survey ID
@@ -44,6 +86,7 @@ class QuestionMixin:
                      "MAHR" for multiple answer horizontal - use allow_multiple=True
             allow_multiple: Set to True for checkboxes (multiple answers)
             block_id: Optional block ID to add question to specific block
+            question_id: If provided, replace this existing question in place
 
         Returns:
             Dictionary with question details including QuestionID
@@ -75,30 +118,17 @@ class QuestionMixin:
             }
         }
 
-        # Build URL and params (block_id as query parameter)
-        url = f'{self.base_url}/survey-definitions/{survey_id}/questions'
-        params = {'blockId': block_id} if block_id else None
-
-        response = requests.post(
-            url,
-            headers=self.headers,
-            json=question_data,
-            params=params
-        )
-
-        if response.status_code == 200:
-            return response.json()['result']
-        else:
-            raise Exception(f"Failed to create question: {response.text}")
+        return self._send_question(survey_id, question_data, question_id, block_id)
 
     def create_text_entry_question(
         self, survey_id: str, question_text: str,
         text_type: str = "SL",
         data_export_tag: Optional[str] = None,
-        block_id: Optional[str] = None
+        block_id: Optional[str] = None,
+        question_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Create a text entry question
+        Create a text entry question, or replace an existing question in place.
 
         Args:
             survey_id: The survey ID
@@ -107,6 +137,7 @@ class QuestionMixin:
                       "Form" for form field
             data_export_tag: Optional export tag (auto-generated if not provided)
             block_id: Optional block ID to add question to specific block
+            question_id: If provided, replace this existing question in place
 
         Returns:
             Dictionary with question details
@@ -124,29 +155,16 @@ class QuestionMixin:
             }
         }
 
-        # Build URL and params (block_id as query parameter)
-        url = f'{self.base_url}/survey-definitions/{survey_id}/questions'
-        params = {'blockId': block_id} if block_id else None
-
-        response = requests.post(
-            url,
-            headers=self.headers,
-            json=question_data,
-            params=params
-        )
-
-        if response.status_code == 200:
-            return response.json()['result']
-        else:
-            raise Exception(f"Failed to create text entry question: {response.text}")
+        return self._send_question(survey_id, question_data, question_id, block_id)
 
     def create_matrix_question(
         self, survey_id: str, question_text: str,
         statements: List[str], scale_points: List[str],
-        block_id: Optional[str] = None
+        block_id: Optional[str] = None,
+        question_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Create a matrix (Likert scale) question
+        Create a matrix (Likert scale) question, or replace an existing question in place.
 
         Args:
             survey_id: The survey ID
@@ -154,6 +172,7 @@ class QuestionMixin:
             statements: List of statement texts (rows)
             scale_points: List of scale point labels (columns)
             block_id: Optional block ID to add question to specific block
+            question_id: If provided, replace this existing question in place
 
         Returns:
             Dictionary with question details
@@ -180,31 +199,18 @@ class QuestionMixin:
             }
         }
 
-        # Build URL and params (block_id as query parameter)
-        url = f'{self.base_url}/survey-definitions/{survey_id}/questions'
-        params = {'blockId': block_id} if block_id else None
-
-        response = requests.post(
-            url,
-            headers=self.headers,
-            json=question_data,
-            params=params
-        )
-
-        if response.status_code == 200:
-            return response.json()['result']
-        else:
-            raise Exception(f"Failed to create matrix question: {response.text}")
+        return self._send_question(survey_id, question_data, question_id, block_id)
 
     def create_slider_question(
         self, survey_id: str, question_text: str,
         min_value: int = 0, max_value: int = 100,
         left_label: str = "", right_label: str = "",
         data_export_tag: Optional[str] = None,
-        block_id: Optional[str] = None
+        block_id: Optional[str] = None,
+        question_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Create a slider question
+        Create a slider question, or replace an existing question in place.
 
         Args:
             survey_id: The survey ID
@@ -215,6 +221,7 @@ class QuestionMixin:
             right_label: Label for right side
             data_export_tag: Optional export tag (auto-generated if not provided)
             block_id: Optional block ID to add question to specific block
+            question_id: If provided, replace this existing question in place
 
         Returns:
             Dictionary with question details
@@ -229,7 +236,7 @@ class QuestionMixin:
             "Selector": "HSLIDER",
             "Configuration": {
                 "QuestionDescriptionOption": "UseText",
-                "GridLines": 0,  # Set to 0 to only show min/max labels
+                "GridLines": 0,
                 "NumDecimals": "0",
                 "ShowValue": True
             },
@@ -241,7 +248,6 @@ class QuestionMixin:
             "ChoiceOrder": [1]
         }
 
-        # Add labels if provided
         if left_label or right_label:
             question_data["Labels"] = {}
             if left_label:
@@ -249,30 +255,17 @@ class QuestionMixin:
             if right_label:
                 question_data["Labels"][str(max_value)] = {"Display": right_label}
 
-        # Build URL and params (block_id as query parameter)
-        url = f'{self.base_url}/survey-definitions/{survey_id}/questions'
-        params = {'blockId': block_id} if block_id else None
-
-        response = requests.post(
-            url,
-            headers=self.headers,
-            json=question_data,
-            params=params
-        )
-
-        if response.status_code == 200:
-            return response.json()['result']
-        else:
-            raise Exception(f"Failed to create slider question: {response.text}")
+        return self._send_question(survey_id, question_data, question_id, block_id)
 
     def create_rank_order_question(
         self, survey_id: str, question_text: str,
         items: List[str],
         data_export_tag: Optional[str] = None,
-        block_id: Optional[str] = None
+        block_id: Optional[str] = None,
+        question_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Create a rank order question
+        Create a rank order question, or replace an existing question in place.
 
         Args:
             survey_id: The survey ID
@@ -280,6 +273,7 @@ class QuestionMixin:
             items: List of items to rank
             data_export_tag: Optional export tag (auto-generated if not provided)
             block_id: Optional block ID to add question to specific block
+            question_id: If provided, replace this existing question in place
 
         Returns:
             Dictionary with question details
@@ -295,7 +289,7 @@ class QuestionMixin:
             "QuestionText": question_text,
             "DataExportTag": data_export_tag,
             "QuestionType": "RO",
-            "Selector": "DND",  # Drag and Drop
+            "Selector": "DND",
             "SubSelector": "TX",
             "Choices": choices_dict,
             "Configuration": {
@@ -303,34 +297,22 @@ class QuestionMixin:
             }
         }
 
-        # Build URL and params (block_id as query parameter)
-        url = f'{self.base_url}/survey-definitions/{survey_id}/questions'
-        params = {'blockId': block_id} if block_id else None
-
-        response = requests.post(
-            url,
-            headers=self.headers,
-            json=question_data,
-            params=params
-        )
-
-        if response.status_code == 200:
-            return response.json()['result']
-        else:
-            raise Exception(f"Failed to create rank order question: {response.text}")
+        return self._send_question(survey_id, question_data, question_id, block_id)
 
     def create_nps_question(
         self, survey_id: str,
         question_text: Optional[str] = None,
-        block_id: Optional[str] = None
+        block_id: Optional[str] = None,
+        question_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Create a Net Promoter Score (NPS) question
+        Create a Net Promoter Score (NPS) question, or replace an existing question in place.
 
         Args:
             survey_id: The survey ID
             question_text: The question text (default: standard NPS question)
             block_id: Optional block ID to add question to specific block
+            question_id: If provided, replace this existing question in place
 
         Returns:
             Dictionary with question details
@@ -346,7 +328,7 @@ class QuestionMixin:
         question_data = {
             "QuestionText": question_text,
             "QuestionType": "MC",
-            "Selector": "SAHR",  # Single answer horizontal
+            "Selector": "SAHR",
             "SubSelector": "TX",
             "Choices": choices_dict,
             "Configuration": {
@@ -354,33 +336,21 @@ class QuestionMixin:
             }
         }
 
-        # Build URL and params (block_id as query parameter)
-        url = f'{self.base_url}/survey-definitions/{survey_id}/questions'
-        params = {'blockId': block_id} if block_id else None
-
-        response = requests.post(
-            url,
-            headers=self.headers,
-            json=question_data,
-            params=params
-        )
-
-        if response.status_code == 200:
-            return response.json()['result']
-        else:
-            raise Exception(f"Failed to create NPS question: {response.text}")
+        return self._send_question(survey_id, question_data, question_id, block_id)
 
     def create_descriptive_text(
         self, survey_id: str, text: str,
-        block_id: Optional[str] = None
+        block_id: Optional[str] = None,
+        question_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
-        Create descriptive text (non-question text block)
+        Create descriptive text, or replace an existing question in place.
 
         Args:
             survey_id: The survey ID
             text: The descriptive text to display
             block_id: Optional block ID to add text to specific block
+            question_id: If provided, replace this existing question in place
 
         Returns:
             Dictionary with question details
@@ -395,18 +365,4 @@ class QuestionMixin:
             }
         }
 
-        # Build URL and params (block_id as query parameter)
-        url = f'{self.base_url}/survey-definitions/{survey_id}/questions'
-        params = {'blockId': block_id} if block_id else None
-
-        response = requests.post(
-            url,
-            headers=self.headers,
-            json=question_data,
-            params=params
-        )
-
-        if response.status_code == 200:
-            return response.json()['result']
-        else:
-            raise Exception(f"Failed to create descriptive text: {response.text}")
+        return self._send_question(survey_id, question_data, question_id, block_id)
