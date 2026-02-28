@@ -10,6 +10,7 @@ from .question_management import QuestionManagementMixin
 from .blocks import BlockMixin
 from .display_logic import DisplayLogicMixin
 from .embedded_data import EmbeddedDataMixin
+from .branch_logic import BranchLogicMixin
 
 
 class QualtricsAPI(
@@ -19,7 +20,8 @@ class QualtricsAPI(
     QuestionManagementMixin,
     BlockMixin,
     DisplayLogicMixin,
-    EmbeddedDataMixin
+    EmbeddedDataMixin,
+    BranchLogicMixin
 ):
     """
     Main Qualtrics API client.
@@ -32,6 +34,7 @@ class QualtricsAPI(
     - BlockMixin: Block operations
     - DisplayLogicMixin: Display logic and conditional display
     - EmbeddedDataMixin: Embedded data field configuration and URL generation
+    - BranchLogicMixin: Survey flow branching (route to blocks based on conditions)
 
     Usage:
         >>> from qualtrics_sdk import QualtricsAPI
