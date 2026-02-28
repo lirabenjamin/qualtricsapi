@@ -2,6 +2,7 @@
 Setup configuration for Qualtrics SDK
 """
 
+import re
 from setuptools import setup, find_packages
 from pathlib import Path
 
@@ -9,15 +10,14 @@ from pathlib import Path
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
-# Read version from package
-about = {}
-with open(this_directory / "qualtrics_sdk" / "__init__.py") as f:
-    exec(f.read(), about)
+# Read version from package without importing it
+init_text = (this_directory / "qualtrics_sdk" / "__init__.py").read_text()
+version = re.search(r'^__version__\s*=\s*["\']([^"\']+)["\']', init_text, re.MULTILINE).group(1)
 
 setup(
     name="qualtrics-sdk",
-    version=about["__version__"],
-    author=about["__author__"],
+    version=version,
+    author="Benjamin Lira",
     author_email="your.email@example.com",
     description="A comprehensive Python SDK for the Qualtrics REST API v3",
     long_description=long_description,
@@ -48,11 +48,6 @@ setup(
             "black>=22.0.0",
             "flake8>=4.0.0",
             "mypy>=0.950",
-        ],
-    },
-    entry_points={
-        "console_scripts": [
-            "qualtrics=qualtrics_sdk.cli:main",
         ],
     },
     keywords="qualtrics api survey research data-collection",
