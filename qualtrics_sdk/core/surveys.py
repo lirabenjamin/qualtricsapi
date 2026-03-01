@@ -62,7 +62,7 @@ class SurveyMixin:
 
     def _apply_default_options(self, survey_id: str) -> None:
         """Apply default options to a newly created survey (classic template + embedded data)."""
-        self.set_survey_template(survey_id, "*classic")
+        self.set_survey_template(survey_id, "*2014")
 
         caller_path = self._get_caller_path()
         today = datetime.now().strftime("%Y-%m-%d")
@@ -130,15 +130,16 @@ class SurveyMixin:
             raise Exception(f"Failed to update survey options: {response.text}")
 
     def set_survey_template(
-        self, survey_id: str, template_id: str = "*classic"
+        self, survey_id: str, template_id: str = "*2014"
     ) -> bool:
         """
         Set the survey's look-and-feel template.
 
         Args:
             survey_id: The survey ID
-            template_id: Template identifier (default: "*classic").
-                         Known values: "*base" (flat/modern), "*classic" (classic).
+            template_id: Template identifier (default: "*2014").
+                         Known values: "*base" (flat/modern), "*2014" (classic),
+                         "*simple" (simple/component).
 
         Returns:
             True if successful
