@@ -9,3 +9,6 @@
 - [x] Wire `BranchLogicMixin` into `QualtricsAPI` client
 - [x] End-to-end test: MC choice branching, embedded data branching, multi-condition AND branch
 - [x] Clean up test surveys
+- [x] Change default survey design from "flat" to "classic" (`Skin.templateId: "*classic"`)
+- [x] Add default embedded data: PROLIFIC_PID (from URL), date_created, created_by_script
+- [x] Add `get_survey_options()`, `update_survey_options()`, `set_survey_template()` methods
