@@ -149,6 +149,52 @@ class SurveyMixin:
         skin["templateId"] = template_id
         return self.update_survey_options(survey_id, {"Skin": skin})
 
+    def set_survey_header(
+        self,
+        survey_id: str,
+        header_html: str,
+        append: bool = False,
+    ) -> bool:
+        """
+        Set or append HTML/JS in the survey header (Look and Feel > General > Header).
+
+        Args:
+            survey_id: The survey ID
+            header_html: Raw HTML string (may include <script> tags)
+            append: If True, append to existing header instead of replacing
+
+        Returns:
+            True if successful
+        """
+        if append:
+            options = self.get_survey_options(survey_id)
+            existing = options.get("Header", "")
+            header_html = existing + header_html
+        return self.update_survey_options(survey_id, {"Header": header_html})
+
+    def set_survey_footer(
+        self,
+        survey_id: str,
+        footer_html: str,
+        append: bool = False,
+    ) -> bool:
+        """
+        Set or append HTML/JS in the survey footer.
+
+        Args:
+            survey_id: The survey ID
+            footer_html: Raw HTML string (may include <script> tags)
+            append: If True, append to existing footer instead of replacing
+
+        Returns:
+            True if successful
+        """
+        if append:
+            options = self.get_survey_options(survey_id)
+            existing = options.get("Footer", "")
+            footer_html = existing + footer_html
+        return self.update_survey_options(survey_id, {"Footer": footer_html})
+
     def get_survey(self, survey_id: str) -> Dict[str, Any]:
         """
         Get survey details
