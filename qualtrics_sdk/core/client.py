@@ -11,6 +11,7 @@ from .blocks import BlockMixin
 from .display_logic import DisplayLogicMixin
 from .embedded_data import EmbeddedDataMixin
 from .branch_logic import BranchLogicMixin
+from .graphics import GraphicsMixin
 
 
 class QualtricsAPI(
@@ -21,7 +22,8 @@ class QualtricsAPI(
     BlockMixin,
     DisplayLogicMixin,
     EmbeddedDataMixin,
-    BranchLogicMixin
+    BranchLogicMixin,
+    GraphicsMixin,
 ):
     """
     Main Qualtrics API client.
