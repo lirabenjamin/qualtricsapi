@@ -85,7 +85,7 @@ class DisplayLogicMixin:
                 condition['Operator'] = operator
 
         elif logic_type == 'EmbeddedField':
-            condition['LeftOperand'] = f'ed://{question_id}'
+            condition['LeftOperand'] = question_id
             condition['Operator'] = operator
             if value is not None:
                 condition['RightOperand'] = str(value)

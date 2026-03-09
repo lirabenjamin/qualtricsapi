@@ -342,7 +342,6 @@ class QuestionMixin:
             "DataExportTag": data_export_tag,
             "QuestionType": "MC",
             "Selector": "NPS",
-            "SubSelector": "TX",
             "Choices": choices_dict,
             "ChoiceOrder": [str(i) for i in range(11)],
             "Configuration": {

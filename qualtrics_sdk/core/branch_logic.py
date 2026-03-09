@@ -65,7 +65,7 @@ class BranchLogicMixin:
                 condition["Operator"] = operator
 
         elif logic_type == "EmbeddedField":
-            condition["LeftOperand"] = f"ed://{source_question_id}"
+            condition["LeftOperand"] = source_question_id
             condition["Operator"] = operator
             if value is not None:
                 condition["RightOperand"] = str(value)
