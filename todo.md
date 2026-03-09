@@ -1,5 +1,15 @@
 # Todo
 
+## 2026-03-08
+
+- [x] Fix `create_nps_question` to use native NPS selector (MC/NPS) instead of SAHR
+- [x] Add `left_label` and `right_label` params to NPS via `ColumnLabels` API field
+- [x] Add `data_export_tag` param to NPS
+- [x] Add `add_randomizer()` method for BlockRandomizer in survey flow
+- [x] Test randomizer with embedded data dicts (2x2 experiment pattern)
+- [x] Test randomizer with block ID strings
+- [x] Update skill file (`~/.claude/skills/qualtrics-survey/skill.md`) with new methods
+
 ## 2026-02-28
 
 - [x] Create `dev` branch

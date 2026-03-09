@@ -302,15 +302,24 @@ class QuestionMixin:
     def create_nps_question(
         self, survey_id: str,
         question_text: Optional[str] = None,
+        left_label: str = "Not at all likely",
+        right_label: str = "Extremely likely",
+        data_export_tag: Optional[str] = None,
         block_id: Optional[str] = None,
         question_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Create a Net Promoter Score (NPS) question, or replace an existing question in place.
 
+        Creates a 0-10 horizontal scale with labeled endpoints. Uses the native
+        Qualtrics NPS selector (MC/NPS) with ColumnLabels for endpoint text.
+
         Args:
             survey_id: The survey ID
             question_text: The question text (default: standard NPS question)
+            left_label: Label for the 0 end of the scale (default: "Not at all likely")
+            right_label: Label for the 10 end of the scale (default: "Extremely likely")
+            data_export_tag: Optional export tag (auto-generated if not provided)
             block_id: Optional block ID to add question to specific block
             question_id: If provided, replace this existing question in place
 
@@ -320,6 +329,9 @@ class QuestionMixin:
         if question_text is None:
             question_text = "How likely are you to recommend us to a friend or colleague?"
 
+        if data_export_tag is None:
+            data_export_tag = self._generate_data_export_tag(question_text)
+
         # NPS is a 0-10 scale
         choices_dict = {}
         for i in range(11):
@@ -327,13 +339,19 @@ class QuestionMixin:
 
         question_data = {
             "QuestionText": question_text,
+            "DataExportTag": data_export_tag,
             "QuestionType": "MC",
-            "Selector": "SAHR",
+            "Selector": "NPS",
             "SubSelector": "TX",
             "Choices": choices_dict,
+            "ChoiceOrder": [str(i) for i in range(11)],
             "Configuration": {
                 "QuestionDescriptionOption": "UseText"
-            }
+            },
+            "ColumnLabels": [
+                {"Display": left_label, "IsLabelDefault": False},
+                {"Display": right_label, "IsLabelDefault": False},
+            ],
         }
 
         return self._send_question(survey_id, question_data, question_id, block_id)

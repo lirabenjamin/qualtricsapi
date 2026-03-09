@@ -452,6 +452,137 @@ class EmbeddedDataMixin:
         else:
             raise Exception(f"Failed to delete embedded data: {update_response.text}")
 
+    def add_randomizer(
+        self,
+        survey_id: str,
+        elements: List[Dict],
+        subset: int = 1,
+        even_presentation: bool = True,
+        position: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """
+        Add a BlockRandomizer to the survey flow.
+
+        Randomly presents `subset` of the given elements to each respondent.
+        With even_presentation=True, ensures equal distribution across elements.
+
+        Args:
+            survey_id: The survey ID
+            elements: List of flow elements to randomize between. Each element
+                      can be either:
+                      - A block ID string (e.g., "BL_abc123") — will be wrapped
+                        as a Standard block element
+                      - A dict of embedded data fields (e.g., {"ai_cond": "1"})
+                        — will be wrapped as an EmbeddedData element
+            subset: Number of elements to show per respondent (default: 1)
+            even_presentation: Ensure equal distribution (default: True)
+            position: Index in flow to insert (default: after embedded data,
+                      before blocks)
+
+        Returns:
+            Dictionary with randomizer details including FlowID
+        """
+        if not elements:
+            raise ValueError("At least one element is required")
+
+        # Get current flow
+        current_flow = self.get_survey_flow(survey_id)
+        flow_list = current_flow.get("Flow", [])
+
+        # Build inner flow elements
+        inner_flow = []
+        block_ids_to_remove = set()
+
+        for elem in elements:
+            if isinstance(elem, str):
+                # Block ID string -> Standard block element
+                fid = self._get_next_flow_id(flow_list + inner_flow)
+                inner_flow.append({
+                    "Type": "Standard",
+                    "ID": elem,
+                    "FlowID": fid,
+                })
+                block_ids_to_remove.add(elem)
+            elif isinstance(elem, dict):
+                # Dict of embedded data fields -> EmbeddedData element
+                fid = self._get_next_flow_id(flow_list + inner_flow)
+                ed_items = []
+                for field_name, value in elem.items():
+                    ed_items.append({
+                        "Description": field_name,
+                        "Type": "Custom",
+                        "Field": field_name,
+                        "Value": str(value),
+                        "VariableType": "String",
+                    })
+                inner_flow.append({
+                    "Type": "EmbeddedData",
+                    "FlowID": fid,
+                    "EmbeddedData": ed_items,
+                })
+            else:
+                raise ValueError(
+                    f"Each element must be a block ID string or a dict, got {type(elem)}"
+                )
+
+        # Build randomizer element
+        randomizer_fid = self._get_next_flow_id(flow_list + inner_flow)
+        randomizer = {
+            "Type": "BlockRandomizer",
+            "FlowID": randomizer_fid,
+            "SubSet": subset,
+            "EvenPresentation": even_presentation,
+            "Flow": inner_flow,
+        }
+
+        # Remove referenced blocks from top-level flow
+        if block_ids_to_remove:
+            flow_list = [
+                el for el in flow_list
+                if el.get("ID") not in block_ids_to_remove
+            ]
+
+        # Determine insertion position
+        if position is not None:
+            insert_idx = min(position, len(flow_list))
+        else:
+            # Default: after EmbeddedData elements, before blocks
+            insert_idx = 0
+            for i, el in enumerate(flow_list):
+                if el.get("Type") == "EmbeddedData":
+                    insert_idx = i + 1
+                else:
+                    break
+
+        flow_list.insert(insert_idx, randomizer)
+
+        # Update flow
+        update_payload = {
+            "FlowID": current_flow.get("FlowID", "FL_1"),
+            "Type": current_flow.get("Type", "Root"),
+            "Flow": flow_list,
+            "Properties": {
+                "Count": self._count_flow_elements(flow_list) + 1
+            },
+        }
+
+        resp = requests.put(
+            f"{self.base_url}/survey-definitions/{survey_id}/flow",
+            headers=self.headers,
+            json=update_payload,
+        )
+
+        if resp.status_code == 200:
+            return {
+                "FlowID": randomizer_fid,
+                "SubSet": subset,
+                "EvenPresentation": even_presentation,
+                "element_count": len(elements),
+                "success": True,
+            }
+        else:
+            raise Exception(f"Failed to add randomizer: {resp.text}")
+
     def get_survey_url_with_embedded_data(
         self,
         survey_id: str,

@@ -1,5 +1,17 @@
 # Comms
 
+## 2026-03-08 — NPS Labels + Randomizer
+
+BenBen, both features are done and tested against the live API.
+
+**NPS fix:** The old code used `MC/SAHR` (plain horizontal radio). Now uses `MC/NPS` (native Qualtrics NPS selector) with `ColumnLabels` for endpoint labels. The `ColumnLabels` format is `[{"Display": "left text", "IsLabelDefault": false}, {"Display": "right text", "IsLabelDefault": false}]` — discovered from your QSF file.
+
+**Randomizer:** `add_randomizer()` added to `EmbeddedDataMixin`. Supports both block ID strings and embedded data dicts. Blocks are auto-removed from top-level flow (same pattern as branch logic).
+
+**Skill file** updated with both new methods and experiment workflow notes.
+
+**No questions for you.**
+
 ## 2026-02-28 — Branch Logic Implementation
 
 BenBen, here's the summary of what was done:
